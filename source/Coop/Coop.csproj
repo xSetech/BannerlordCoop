@@ -298,6 +298,7 @@
     <Compile Include="Mod\Managers\TestMPManger.cs" />
     <Compile Include="Mod\MbLogTarget.cs" />
     <Compile Include="Mod\Missions\BattleMission.cs" />
+    <Compile Include="Mod\Patch\MainMenuSkip.cs" />
     <Compile Include="Mod\Patch\TimeSynchronization.cs" />
     <Compile Include="Mod\Patch\Debugging.cs" />
     <Compile Include="Mod\Patch\Exceptions.cs" />
@@ -422,6 +423,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="FodyWeavers.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Mod\Missions\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
