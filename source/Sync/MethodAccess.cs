@@ -38,8 +38,9 @@ namespace Sync
         public EMethodPatchFlag Flags { get; private set; } = EMethodPatchFlag.None;
 
         /// <summary>
-        ///     If set, this function will be called before invoking any onBeforeCall handlers. If the
-        ///     function evaluates to false, the onBeforeCall handlers will not be called.
+        ///     If set, this function will be called with the instance as an argument
+        ///     before invoking any onBeforeCall handlers. If the function evaluates
+        ///     to false, the onBeforeCall handlers will not be called.
         /// </summary>
         [CanBeNull]
         public Func<object, bool> Condition { get; set; }

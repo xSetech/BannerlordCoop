@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.Core;
 
 namespace Coop.Mod
 {
@@ -28,6 +30,11 @@ namespace Coop.Mod
         public bool IsPlayerControlledParty(MobileParty party)
         {
             return m_PlayerParties.Contains(party);
+        }
+        
+        public bool IsPlayerControlled(BasicCharacterObject character)
+        {
+            return !m_PlayerParties.Where(party => party.Leader == character).IsEmpty();
         }
     }
 }

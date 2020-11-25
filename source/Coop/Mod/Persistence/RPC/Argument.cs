@@ -30,7 +30,8 @@ namespace Coop.Mod.Persistence.RPC
         Int,
         Float,
         StoreObjectId,
-        CurrentCampaign
+        CurrentCampaign,
+        CampaignEventDispatcher
     }
 
     /// <summary>
@@ -43,6 +44,8 @@ namespace Coop.Mod.Persistence.RPC
         public static Argument CurrentCampaign = new Argument(EventArgType.CurrentCampaign);
 
         public static Argument MBObjectManager = new Argument(EventArgType.MBObjectManager);
+        
+        public static Argument CampaignEventDispatcher = new Argument(EventArgType.CampaignEventDispatcher);
 
         private Argument(EventArgType eType) : this()
         {
@@ -104,6 +107,8 @@ namespace Coop.Mod.Persistence.RPC
                     break;
                 case EventArgType.CurrentCampaign:
                     break;
+                case EventArgType.CampaignEventDispatcher:
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -142,6 +147,8 @@ namespace Coop.Mod.Persistence.RPC
                     return $"{StoreObjectId.ToString()}";
                 case EventArgType.CurrentCampaign:
                     return "Campaign.Current";
+                case EventArgType.CampaignEventDispatcher:
+                    return "Campaign.CampaignEventDispatcher";
                 default:
                     throw new ArgumentOutOfRangeException();
             }

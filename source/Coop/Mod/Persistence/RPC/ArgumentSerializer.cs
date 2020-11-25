@@ -46,6 +46,9 @@ namespace Coop.Mod.Persistence.RPC
                 case EventArgType.CurrentCampaign:
                     // Empty
                     break;
+                case EventArgType.CampaignEventDispatcher:
+                    // Empty
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -73,6 +76,8 @@ namespace Coop.Mod.Persistence.RPC
                     return new Argument(new ObjectId(buffer.ReadUInt()));
                 case EventArgType.CurrentCampaign:
                     return Argument.CurrentCampaign;
+                case EventArgType.CampaignEventDispatcher:
+                    return Argument.CampaignEventDispatcher;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

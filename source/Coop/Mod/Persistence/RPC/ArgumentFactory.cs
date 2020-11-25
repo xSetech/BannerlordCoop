@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using JetBrains.Annotations;
 using NLog;
 using RailgunNet.Logic;
@@ -64,6 +65,11 @@ namespace Coop.Mod.Persistence.RPC
                     return resolvedObject;
                 case EventArgType.CurrentCampaign:
                     return Campaign.Current;
+                case EventArgType.CampaignEventDispatcher:
+                    return typeof(Campaign).GetProperty(
+                                        "CampaignEventDispatcher",
+                                        BindingFlags.Instance | BindingFlags.NonPublic)
+                                    .GetValue(Campaign.Current);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -120,6 +126,8 @@ namespace Coop.Mod.Persistence.RPC
                     }
                     // New campaign? Send by value
                     return new Argument(store.Insert(obj));
+                case CampaignEventDispatcher dispatcher:
+                    return Argument.CampaignEventDispatcher;
                 default:
                     return new Argument(store.Insert(obj));
             }

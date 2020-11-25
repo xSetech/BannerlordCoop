@@ -60,8 +60,6 @@ namespace Coop.Mod.Persistence.RPC
                 {
                     if (args is object[] objects)
                     {
-                        bool bDebounce =
-                            MethodAccess.Flags.HasFlag(EMethodPatchFlag.DebounceCalls);
                         MethodCall call = new MethodCall(
                             MethodAccess.Id,
                             ArgumentFactory.Create(
@@ -70,7 +68,7 @@ namespace Coop.Mod.Persistence.RPC
                                 false),
                             ProduceArguments(objects));
 
-                        if (bDebounce && PendingRequests.Instance.IsPending(call))
+                        if (PendingRequests.Instance.IsPending(call))
                         {
                             Logger.Debug("Debounced RPC {}", call);
                         }

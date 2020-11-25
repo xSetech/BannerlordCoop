@@ -39,10 +39,9 @@ namespace Sync
         }
 
         public MethodPatch InterceptAll(
-            BindingFlags eBindingFlags =
-                BindingFlags.Static | BindingFlags.Public | BindingFlags.DeclaredOnly,
             EMethodPatchFlag eFlags = EMethodPatchFlag.None,
-            EPatchBehaviour eBehaviour = EPatchBehaviour.NeverCallOriginal)
+            EPatchBehaviour eBehaviour = EPatchBehaviour.NeverCallOriginal,
+            BindingFlags eBindingFlags = All)
         {
             foreach (MethodInfo method in m_Declaring.GetMethods(eBindingFlags))
             {
