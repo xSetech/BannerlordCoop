@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Autofac;
 using Common;
 using Coop.Lib.NoHarmony;
 using Coop.Mod.Behaviour;
+using Coop.Mod.Binding;
 using Coop.Mod.DebugUtil;
 using Coop.Mod.Patch;
 using Coop.Mod.UI;
@@ -41,11 +43,19 @@ namespace Coop.Mod
         {
             Debug.DebugManager = Debugging.DebugManager;
             MBDebug.DisableLogging = false;
-
             Instance = this;
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-            Updateables.Add(CoopClient.Instance);
-            Updateables.Add(GameLoopRunner.Instance);
+
+            using (var scope = ContainerGenerator.Generate().BeginLifetimeScope())
+            {
+
+                var coopClient = scope.Resolve<ICoopClient>();
+                var gameLoopRunner = scope.Resolve<IGameLoopRunner>();
+
+                Updateables.Add(coopClient);
+                Updateables.Add(gameLoopRunner);
+            }
+
         }
 
         public static Main Instance { get; private set; }

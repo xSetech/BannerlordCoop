@@ -33,7 +33,12 @@ namespace Coop.Mod
         }
     }
 
-    public class CoopClient : IUpdateable, IClientAccess
+    public interface ICoopClient : IUpdateable, IClientAccess
+    {
+
+    }
+
+    public class CoopClient : ICoopClient
     {
         private const int MaxReconnectAttempts = 2;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
