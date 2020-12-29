@@ -2,57 +2,90 @@
 using System.Collections.Generic;
 using System.Net;
 using Coop.Mod.Persistence;
+using Coop.Mod.Repository;
 using Network.Infrastructure;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Library;
 
 namespace Coop.Mod.DebugUtil
 {
-    public static class CLICommands
+    public interface ICLICommands
+    {
+        string DumpInfo(List<string> parameters);
+        string ShowDebugUi(List<string> parameters);
+        string StartServer(List<string> parameters);
+        string ConnectTo(List<string> parameters);
+        string Disconnect(List<string> parameters);
+        string Help(List<string> parameters);
+        string Record(List<string> parameters);
+        string Play(List<string> parameters);
+        string Stop(List<string> parameters);
+        string DisableWarn(List<string> parameters);
+        string Spawn(List<string> parameters);
+
+
+    }
+
+    public class CLICommands : ICLICommands
     {
         private const string sGroupName = "coop";
         private const string sTestGroupName = "test";
 
-        private static DebugUI m_DebugUI;
+        private readonly IDebugUI DebugUI;
+
+        private readonly IUpdateableRepository UpdateableRepository;
+        private readonly ICoopClient CoopClient;
+        private readonly ICoopServer CoopServer;
+        private readonly IReplay Replay;
+
+        public CLICommands(
+            IUpdateableRepository updateableRepository,
+            ICoopClient coopClient,
+            ICoopServer coopServer,
+            IDebugUI debugUI,
+            IReplay replay)
+        {
+            UpdateableRepository = updateableRepository;
+            CoopClient = coopClient;
+            CoopServer = coopServer;
+            DebugUI = debugUI;
+            Replay = replay;
+            UpdateableRepository.Add(DebugUI);
+        }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("info", sGroupName)]
-        public static string DumpInfo(List<string> parameters)
+        public string DumpInfo(List<string> parameters)
         {
             string sMessage = "";
-            sMessage += CoopServer.Instance + Environment.NewLine;
+            sMessage += CoopServer + Environment.NewLine;
             sMessage += Environment.NewLine + "*** Client ***" + Environment.NewLine;
-            sMessage += CoopClient.Instance + Environment.NewLine;
+            sMessage += CoopClient + Environment.NewLine;
             return sMessage;
         }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("show_debug_ui", sGroupName)]
-        public static string ShowDebugUi(List<string> parameters)
+        public string ShowDebugUi(List<string> parameters)
         {
-            if (m_DebugUI == null)
-            {
-                m_DebugUI = new DebugUI();
-                Main.Instance.Updateables.Add(m_DebugUI);
-            }
 
-            m_DebugUI.Visible = true;
+            DebugUI.Visible = true;
             return "";
         }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("start_local_server", sGroupName)]
-        public static string StartServer(List<string> parameters)
+        public string StartServer(List<string> parameters)
         {
-            if (CoopServer.Instance.StartServer() == null)
+            if (CoopServer.StartServer() == null)
             {
-                ServerConfiguration config = CoopServer.Instance.Current.ActiveConfig;
-                CoopClient.Instance.Connect(config.NetworkConfiguration.LanAddress, config.NetworkConfiguration.LanPort);
-                return CoopServer.Instance.ToString();
+                ServerConfiguration config = CoopServer.Current.ActiveConfig;
+                CoopClient.Connect(config.NetworkConfiguration.LanAddress, config.NetworkConfiguration.LanPort);
+                return CoopServer.ToString();
             }
 
             return null;
         }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("connect_to", sGroupName)]
-        public static string ConnectTo(List<string> parameters)
+        public string ConnectTo(List<string> parameters)
         {
             if (parameters.Count != 2 ||
                 !IPAddress.TryParse(parameters[0], out IPAddress ip) ||
@@ -63,19 +96,19 @@ namespace Coop.Mod.DebugUtil
                        $"\tExample: \"{sGroupName}.connect_to 127.0.0.1 4201\".";
             }
 
-            CoopClient.Instance.Connect(ip, iPort);
+            CoopClient.Connect(ip, iPort);
             return "Client connection request sent.";
         }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("disconnect", sGroupName)]
-        public static string Disconnect(List<string> parameters)
+        public string Disconnect(List<string> parameters)
         {
-            CoopClient.Instance.Disconnect();
+            CoopClient.Disconnect();
             return "Client disconnection request sent.";
         }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("help", sGroupName)]
-        public static string Help(List<string> parameters)
+        public string Help(List<string> parameters)
         {
             return "Coop commands:\n" +
                    "\tcoop.record <filename>\tStart record movements of all parties.\n" +
@@ -84,7 +117,7 @@ namespace Coop.Mod.DebugUtil
         }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("record", sGroupName)]
-        public static string Record(List<string> parameters)
+        public string Record(List<string> parameters)
         {
             if (parameters.Count < 1)
             {
@@ -95,7 +128,7 @@ namespace Coop.Mod.DebugUtil
         }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("play", sGroupName)]
-        public static string Play(List<string> parameters)
+        public string Play(List<string> parameters)
         {
             if (parameters.Count < 1)
             {
@@ -106,7 +139,7 @@ namespace Coop.Mod.DebugUtil
         }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("stop", sGroupName)]
-        public static string Stop(List<string> parameters)
+        public string Stop(List<string> parameters)
         {
             return Replay.Stop();
         }
@@ -114,7 +147,7 @@ namespace Coop.Mod.DebugUtil
         [CommandLineFunctionality.CommandLineArgumentFunction(
             "disable_inconsistent_state_warnings",
             sGroupName)]
-        public static string DisableWarn(List<string> parameters)
+        public string DisableWarn(List<string> parameters)
         {
             string help =
                 "Disable(1) or enable(0) to show warnings about inconsistent internal state\n" +
@@ -125,7 +158,7 @@ namespace Coop.Mod.DebugUtil
                 return help;
             }
 
-            EntityManager entityManager = CoopServer.Instance?.Persistence?.EntityManager;
+            EntityManager entityManager = CoopServer.Persistence?.EntityManager;
             if (entityManager == null)
             {
                 return "Server not started.";
@@ -147,7 +180,7 @@ namespace Coop.Mod.DebugUtil
         }
 
         [CommandLineFunctionality.CommandLineArgumentFunction("spawn_party", sTestGroupName)]
-        public static string Spawn(List<string> parameters)
+        public string Spawn(List<string> parameters)
         {
             MobileParty party = PartySpawnHelper.SpawnTestersNear(Campaign.Current.MainParty);
             return $"Spawned {party}.";

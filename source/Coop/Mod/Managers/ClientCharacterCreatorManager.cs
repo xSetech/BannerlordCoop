@@ -1,27 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Permissions;
-using System.Text;
-using System.Threading.Tasks;
-using Coop.Mod.Serializers;
-using SandBox;
 using StoryMode;
 using StoryMode.CharacterCreationSystem;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.Core;
-using TaleWorlds.Engine.Screens;
-using TaleWorlds.MountAndBlade;
-using TaleWorlds.ObjectSystem;
 using TaleWorlds.SaveSystem.Load;
-using System.Reflection;
-using NetworkMessages.FromClient;
-using Module = TaleWorlds.MountAndBlade.Module;
-using TaleWorlds.CampaignSystem.Actions;
-using TaleWorlds.Library;
-using TaleWorlds.Localization;
-using Helpers;
 using Sync.Store;
+using Coop.Mod.Binding;
 
 namespace Coop.Mod.Managers
 {
@@ -66,7 +51,7 @@ namespace Coop.Mod.Managers
 
             OnGameLoadFinishedEvent?.Invoke(this, new HeroEventArgs(
                 MobileParty.MainParty.Name.ToString(),
-                CoopClient.Instance.SyncedObjectStore.Insert(Hero.MainHero)
+                ContainerGenerator.CoopClient.SyncedObjectStore.Insert(Hero.MainHero)
             ));
             EndGame();
         }

@@ -27,10 +27,14 @@ namespace Coop.Mod.Persistence
         private readonly List<MobileParty> m_PartiesToAdd = new List<MobileParty>();
         private readonly RailServerRoom m_Room;
         private readonly RailServer m_Server;
+        private readonly ICoop Coop;
 
-        public EntityManager(RailServer server)
+        public EntityManager(
+            RailServer server,
+            ICoop coop)
         {
             m_Server = server ?? throw new ArgumentNullException(nameof(server));
+            Coop = coop;
             m_Room = m_Server.StartRoom();
             InitRoom(m_Room);
             m_Room.PostRoomUpdate += AddPendingParties;

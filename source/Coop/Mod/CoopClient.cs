@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using Common;
+using Coop.Mod.Config;
 using Coop.Mod.Managers;
 using Coop.Mod.Persistence;
 using Coop.Mod.Persistence.RPC;
@@ -14,11 +15,8 @@ using Network.Protocol;
 using NLog;
 using RailgunNet.Connection.Client;
 using RailgunNet.Logic;
-using StoryMode;
 using Sync.Store;
 using TaleWorlds.CampaignSystem;
-using TaleWorlds.Core;
-using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade;
 using Logger = NLog.Logger;
 
@@ -36,6 +34,32 @@ namespace Coop.Mod
     public interface ICoopClient : IUpdateable, IClientAccess
     {
 
+        Action<PersistenceClient> OnPersistenceInitialized { get; }
+
+        Action<RemoteStore> RemoteStoreCreated { get; set; }
+
+        [CanBeNull]
+        RemoteStore SyncedObjectStore { get; }
+
+        [CanBeNull] PersistenceClient Persistence { get; }
+
+        [NotNull] GameSession Session { get; }
+
+        CoopGameState GameState { get; }
+        CoopEvents Events { get; }
+
+        bool ClientConnected { get; }
+
+        bool ClientPlaying { get; }
+
+        new RemoteStore GetStore();
+
+        new RailClientRoom GetRoom();
+        new void Update(TimeSpan frameTime);
+
+        string Connect(IPAddress ip, int iPort);
+
+        void Disconnect();
     }
 
     public class CoopClient : ICoopClient
@@ -43,8 +67,6 @@ namespace Coop.Mod
         private const int MaxReconnectAttempts = 2;
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private static readonly Lazy<CoopClient> m_Instance =
-            new Lazy<CoopClient>(() => new CoopClient(new ClientConfiguration()));
         private readonly CoopClientSM m_CoopClientSM;
 
         [NotNull] private readonly LiteNetManagerClient m_NetManager;
@@ -60,19 +82,24 @@ namespace Coop.Mod
         private int m_ReconnectAttempts = MaxReconnectAttempts;
         private Hero m_Hero;
         private ObjectId m_HeroId;
-        public Action<PersistenceClient> OnPersistenceInitialized;
+        private readonly ICoop coop;
+        public Action<PersistenceClient> OnPersistenceInitialized { get; }
 
-        public Action<RemoteStore> RemoteStoreCreated;
+        public Action<RemoteStore> RemoteStoreCreated { get; set; }
 
-        public CoopClient(ClientConfiguration config)
+        public CoopClient(
+            ICoop coop,
+            IClientConfigurationCreator clientConfigurationCreator = null)
         {
-            Session = new GameSession(new GameData());
+
+            Session = new GameSession(new GameData(coop.IsServer));
             Session.OnConnectionDestroyed += ConnectionDestroyed;
-            m_NetManager = new LiteNetManagerClient(Session, config);
+            m_NetManager = new LiteNetManagerClient(Session, clientConfigurationCreator.Create());
             GameState = new CoopGameState();
             Events = new CoopEvents();
             m_CoopClientSM = new CoopClientSM();
-            
+            this.coop = coop;
+
             #region State Machine Callbacks
             m_CoopClientSM.CharacterCreationState.OnEntry(CreateCharacter);
             m_CoopClientSM.ReceivingWorldDataState.OnEntry(SendClientRequestInitialWorldData);
@@ -93,8 +120,6 @@ namespace Coop.Mod
         [CanBeNull] public PersistenceClient Persistence { get; private set; }
 
         [NotNull] public GameSession Session { get; }
-
-        public static CoopClient Instance => m_Instance.Value;
 
         public CoopGameState GameState { get; }
         public CoopEvents Events { get; }
@@ -162,7 +187,7 @@ namespace Coop.Mod
 
             if (Persistence == null)
             {
-                Persistence = new PersistenceClient(new GameEnvironmentClient());
+                Persistence = new PersistenceClient(new GameEnvironmentClient(this));
                 OnPersistenceInitialized?.Invoke(Persistence);
             }
 
@@ -183,7 +208,7 @@ namespace Coop.Mod
         {
             if (m_CoopClientSM.State.Equals(ECoopClientState.MainManu))
             {
-                if (Coop.IsServer)
+                if (coop.IsServer)
                 {
                     m_CoopClientSM.StateMachine.Fire(ECoopClientTrigger.CharacterExists);
                 }
@@ -283,7 +308,7 @@ namespace Coop.Mod
         #region ClientAwaitingWorldData
         private void SendClientRequestInitialWorldData()
         {
-            if(Coop.IsServer)
+            if(coop.IsServer)
             {
                 Session.Connection.Send(
                 new Packet(

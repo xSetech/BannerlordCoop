@@ -1,30 +1,59 @@
-﻿using TaleWorlds.CampaignSystem;
+﻿using Coop.Mod.Repository;
+using TaleWorlds.CampaignSystem;
 
 namespace Coop.Mod
 {
-    public static class Coop
+
+    public interface ICoop
     {
-        public static bool IsServer => CoopServer.Instance.Current != null;
-        public static bool IsClientConnected => CoopClient.Instance.ClientConnected;
-        public static bool IsClientPlaying => CoopClient.Instance.ClientPlaying;
+        bool IsServer { get; }
+        bool IsClientConnected { get; }
+        bool IsClientPlaying { get; }
 
         /// <summary>
         ///     The arbiter is the game instance with authority over all clients.
         /// </summary>
-        public static bool IsArbiter =>
-            IsServer && IsClientConnected; // The server currently runs in the hosts game session.
+        bool IsArbiter { get; }
 
-        public static bool DoSync()
-        {
-            return IsClientConnected || IsServer;
-        }
+        bool DoSync();
 
         /// <summary>
         ///     Returns whether changes to an object should be synchronized.
         /// </summary>
         /// <param name="instance"></param>
         /// <returns></returns>
-        public static bool DoSync(object instance)
+        bool DoSync(object instance);
+
+        bool DoSync(MobileParty party);
+    }
+
+    public class Coop : ICoop
+    {
+
+        private readonly ICoopServer CoopServer;
+        private readonly ICoopClient CoopClient;
+
+        public Coop(
+            ICoopServer coopServer,
+            ICoopClient coopClient)
+        {
+            CoopServer = coopServer;
+            CoopClient = coopClient;
+        }
+
+        public bool IsServer => CoopServer.Current != null;
+        public bool IsClientConnected => CoopClient.ClientConnected;
+        public bool IsClientPlaying => CoopClient.ClientPlaying;
+
+        public bool IsArbiter =>
+            IsServer && IsClientConnected; // The server currently runs in the hosts game session.
+
+        public bool DoSync()
+        {
+            return IsClientConnected || IsServer;
+        }
+
+        public bool DoSync(object instance)
         {
             if (instance is MobileParty party)
             {
@@ -34,9 +63,9 @@ namespace Coop.Mod
             return IsArbiter;
         }
 
-        public static bool DoSync(MobileParty party)
+        public bool DoSync(MobileParty party)
         {
-            bool isPlayerController = CoopClient.Instance.GameState.IsPlayerControlledParty(party);
+            bool isPlayerController = CoopClient.GameState.IsPlayerControlledParty(party);
             if (isPlayerController && party == MobileParty.MainParty)
             {
                 return true;

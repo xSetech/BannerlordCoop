@@ -1,33 +1,31 @@
-﻿using TaleWorlds.Core;
-using SandBox.View;
-using SandBox.ViewModelCollection.SaveLoad;
-using TaleWorlds.Engine.Screens;
+﻿using TaleWorlds.Engine.Screens;
 using TaleWorlds.Engine.GauntletUI;
 using TaleWorlds.GauntletUI.Data;
-using TaleWorlds.Library;
-using TaleWorlds.MountAndBlade.View.Missions;
-using System;
-using TaleWorlds.MountAndBlade;
-using TaleWorlds.SaveSystem.Load;
-using TaleWorlds.Engine;
-using TaleWorlds.Localization;
-using System.Linq;
 using Coop.Mod.UI;
-using TaleWorlds.InputSystem;
-using TaleWorlds.TwoDimension;
 
 namespace Coop.Mod
 {
-	class CoopConnectionUI : ScreenBase
-	{
+
+    public interface ICoopConnectionUI
+    {
+
+    }
+
+
+    class CoopConnectionUI : ScreenBase, ICoopConnectionUI
+    {
         private CoopConnectMenuVM _dataSource;
         private GauntletLayer _gauntletLayer;
         private GauntletMovie _gauntletMovie;
 
+        public CoopConnectionUI(ICoopConnectMenuVM coopConnectMenuVM)
+        {
+            _dataSource = (CoopConnectMenuVM) coopConnectMenuVM; // As LoadMovie method needs a ViewModel instance, this cast is a must. TODO Check if it's really necessary
+        }
+
         protected override void OnInitialize()
         {
             base.OnInitialize();
-            _dataSource = new CoopConnectMenuVM();
             _gauntletLayer = new GauntletLayer(100)
             {
                 IsFocusLayer = true

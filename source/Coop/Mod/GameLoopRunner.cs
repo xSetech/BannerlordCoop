@@ -22,7 +22,7 @@ namespace Coop.Mod
         private readonly object m_QueueLock = new object();
         private int m_GameLoopThreadId;
 
-        private GameLoopRunner()
+        public GameLoopRunner()
         {
         }
 

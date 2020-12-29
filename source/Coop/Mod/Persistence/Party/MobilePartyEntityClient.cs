@@ -9,20 +9,30 @@ using TaleWorlds.ObjectSystem;
 
 namespace Coop.Mod.Persistence.Party
 {
+
+    public interface IMobilePartyEntityClient
+    {
+        string ToString();
+    }
+
     /// <summary>
     ///     Railgun: Mobile party implementation for clients. One instance for each mobile party
     ///     that is registered in the Railgun room.
     /// </summary>
-    public class MobilePartyEntityClient : RailEntityClient<MobilePartyState>
+    public class MobilePartyEntityClient : RailEntityClient<MobilePartyState>, IMobilePartyEntityClient
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         [NotNull] private readonly IEnvironmentClient m_Environment;
         [CanBeNull] private MobileParty m_Instance;
+        private readonly IReplay Replay;
 
-        public MobilePartyEntityClient([NotNull] IEnvironmentClient environment)
+        public MobilePartyEntityClient(
+            [NotNull] IEnvironmentClient environment,
+            IReplay replay)
         {
             m_Environment = environment;
+            Replay = replay;
         }
 
         /// <summary>

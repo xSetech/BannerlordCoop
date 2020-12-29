@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Coop.Mod.Binding;
 using Coop.Mod.DebugUtil;
 using Coop.Mod.Serializers;
 using Network.Infrastructure;
@@ -24,13 +25,13 @@ namespace Coop.Mod.Managers
         public override void OnLoadFinished()
         {
             base.OnLoadFinished();
-            if (CoopServer.Instance.StartServer() == null)
+            if (ContainerGenerator.CoopServer.StartServer() == null)
             {
-                ServerConfiguration config = CoopServer.Instance.Current.ActiveConfig;
-                CoopClient.Instance.Connect(config.NetworkConfiguration.LanAddress, config.NetworkConfiguration.LanPort);
+                ServerConfiguration config = ContainerGenerator.CoopServer.Current.ActiveConfig;
+                ContainerGenerator.CoopClient.Connect(config.NetworkConfiguration.LanAddress, config.NetworkConfiguration.LanPort);
             }
 
-            CoopClient.Instance.RemoteStoreCreated += (remoteStore) => {
+            ContainerGenerator.CoopClient.RemoteStoreCreated += (remoteStore) => {
                 remoteStore.OnObjectReceived += (objId, obj) =>
                 {
                     if (obj is PlayerHeroSerializer serializedPlayerHero)

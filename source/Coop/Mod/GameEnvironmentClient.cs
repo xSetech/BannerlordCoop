@@ -10,10 +10,38 @@ using TaleWorlds.CampaignSystem;
 
 namespace Coop.Mod
 {
-    internal class GameEnvironmentClient : IEnvironmentClient
+
+    public interface IGameEnvironmentClient : IEnvironmentClient
     {
-        public GameEnvironmentClient()
+        HashSet<MobileParty> PlayerControlledMobileParties { get; }
+
+        new FieldAccessGroup<MobileParty, MovementData> TargetPosition { get; }
+
+        new FieldAccess<Campaign, CampaignTimeControlMode> TimeControlMode { get; }
+
+        new FieldAccess<Campaign, bool> TimeControlModeLock { get; }
+
+        new CampaignTime AuthoritativeTime { get; set; }
+
+        new void SetIsPlayerControlled(int iPartyIndex, bool isPlayerControlled);
+
+        new IEnumerable<MobileParty> PlayerControlledParties { get; }
+
+        new RemoteStore Store { get; }
+
+        new MobileParty GetMobilePartyByIndex(int iPartyIndex);
+
+        new Campaign GetCurrentCampaign();
+    }
+
+    internal class GameEnvironmentClient : IGameEnvironmentClient
+    {
+
+        private ICoopClient coopClient;
+
+        public GameEnvironmentClient(ICoopClient coopClient)
         {
+            this.coopClient = coopClient;
             TimeSynchronization.GetAuthoritativeTime += () => AuthoritativeTime;
         }
 
@@ -45,7 +73,7 @@ namespace Coop.Mod
         public IEnumerable<MobileParty> PlayerControlledParties => PlayerControlledMobileParties;
 
         public RemoteStore Store =>
-            CoopClient.Instance.SyncedObjectStore ??
+            coopClient.SyncedObjectStore ??
             throw new InvalidOperationException("Client not initialized.");
 
         #region Game state access

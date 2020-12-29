@@ -1,5 +1,6 @@
 ﻿using System;
 using Common;
+using Coop.Mod.Binding;
 using HarmonyLib;
 using NLog;
 using RailgunNet.System.Types;
@@ -35,7 +36,7 @@ namespace Coop.Mod.Patch
                 throw new Exception("Patching failed. Was MapTimeTracker.Tick(float seconds) in the game DLLs changed?");
             }
             
-            access.Condition = o => Coop.IsClientConnected; 
+            access.Condition = o => ContainerGenerator.Coop.IsClientConnected; 
             access.SetGlobalHandler(CreateTickHandler(access));
         }
 
@@ -55,7 +56,7 @@ namespace Coop.Mod.Patch
                         "Unexpected function signature, expected MapTimeTracker.Tick(float seconds). Patch needs to be adjusted.");
                 }
                 
-                if (Coop.IsArbiter)
+                if (ContainerGenerator.Coop.IsArbiter)
                 {
                     // The host is the authority for the campaign time. Go ahead.
                     access.CallOriginal(instance, args);

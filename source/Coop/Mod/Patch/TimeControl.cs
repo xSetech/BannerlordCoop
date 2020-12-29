@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using Autofac;
+using Coop.Mod.Binding;
 using Coop.Mod.Persistence;
 using HarmonyLib;
 using Mono.Reflection;
@@ -8,7 +10,7 @@ using TaleWorlds.CampaignSystem;
 
 namespace Coop.Mod.Patch
 {
-    public static class TimeControl
+    public class TimeControl
     {
         private static readonly PropertyPatch TimeControlPatch =
             new PropertyPatch(typeof(Campaign)).InterceptSetter(nameof(Campaign.TimeControlMode));
@@ -31,23 +33,47 @@ namespace Coop.Mod.Patch
                 AccessTools.Property(typeof(Campaign), nameof(Campaign.TimeControlModeLock))
                            .GetBackingField());
 
+        private static ICoop CoopInstance;
+
         [PatchInitializer]
         public static void Init()
         {
-            FieldChangeBuffer.Intercept(TimeControlMode, TimeControlPatch.Setters, Coop.DoSync);
+
+            if (CoopInstance == null)
+            {
+                using (var scope = ContainerGenerator.Container.BeginLifetimeScope())
+                {
+                    CoopInstance = scope.Resolve<ICoop>();
+                }
+            }
+
+            if (CoopInstance == null)
+            {
+                return;
+            }
+
+            FieldChangeBuffer.Intercept(TimeControlMode, TimeControlPatch.Setters, CoopInstance.DoSync);
             FieldChangeBuffer.Intercept(
                 TimeControlModeLock,
                 TimeControlLockPatch.Setters,
-                Coop.DoSync);
+                CoopInstance.DoSync);
 
             MethodAccess mainPartyWaitingSetter = IsMainPartyWaitingPatch.Setters.First();
-            mainPartyWaitingSetter.Condition = o => Coop.DoSync();
+            mainPartyWaitingSetter.Condition = o => CoopInstance.DoSync();
             mainPartyWaitingSetter.SetGlobalHandler(SetIsMainPartyWaiting);
         }
 
         private static void SetIsMainPartyWaiting(object instance, object value)
         {
-            IEnvironmentClient env = CoopClient.Instance?.Persistence?.Environment;
+
+
+            if (ContainerGenerator.CoopClient == null)
+            {
+                return;
+            }
+
+            IEnvironmentClient env = ContainerGenerator.CoopClient.Persistence?.Environment;
+
             if (env == null) return;
             if (!(value is object[] args)) throw new ArgumentException();
             if (!(args[0] is bool isLocalMainPartyWaiting)) throw new ArgumentException();

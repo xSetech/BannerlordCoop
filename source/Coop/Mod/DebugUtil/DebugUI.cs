@@ -20,12 +20,30 @@ using TaleWorlds.Engine;
 
 namespace Coop.Mod.DebugUtil
 {
+
+    public interface IDebugUI : IUpdateable
+    {
+        bool Visible { get; set; }
+        new void Update(TimeSpan frameTime);
+    }
+
     public class DebugUI : IUpdateable
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly string m_WindowTitle = "Debug UI";
 
         public bool Visible { get; set; }
+
+        private ICoopServer coopServer;
+        private ICoopClient coopClient;
+
+        public DebugUI(
+            ICoopServer coopServer, 
+            ICoopClient coopClient)
+        {
+            this.coopServer = coopServer;
+            this.coopClient = coopClient;
+        }
 
         public void Update(TimeSpan frameTime)
         {
@@ -41,7 +59,7 @@ namespace Coop.Mod.DebugUtil
             }
         }
 
-        private static void DisplayPersistenceMenu()
+        private void DisplayPersistenceMenu()
         {
             if (!Imgui.TreeNode("Persistence"))
             {
@@ -55,12 +73,12 @@ namespace Coop.Mod.DebugUtil
             Imgui.TreePop();
         }
 
-        private static void DisplayPersistenceInfo()
+        private void DisplayPersistenceInfo()
         {
             List<SPeer> peers = new List<SPeer>();
-            if (CoopClient.Instance.Persistence != null)
+            if (coopClient.Persistence != null)
             {
-                RailClientPeer peer = CoopClient.Instance.Persistence.Peer;
+                RailClientPeer peer = coopClient.Persistence.Peer;
                 if (peer != null)
                 {
                     SPeer peerInfo = new SPeer();
@@ -70,9 +88,9 @@ namespace Coop.Mod.DebugUtil
                 }
             }
 
-            if (CoopServer.Instance.Persistence != null)
+            if (coopServer.Persistence != null)
             {
-                foreach (RailServerPeer peer in CoopServer.Instance.Persistence.ConnectedClients)
+                foreach (RailServerPeer peer in coopServer.Persistence.ConnectedClients)
                 {
                     SPeer peerInfo = new SPeer();
                     peerInfo.Peer = peer;
@@ -188,37 +206,37 @@ namespace Coop.Mod.DebugUtil
                 DebugConsole.Toggle();
             }
 
-            if (CoopServer.Instance.Current == null && !CoopClient.Instance.ClientConnected)
+            if (coopServer.Current == null && !coopClient.ClientConnected)
             {
                 Imgui.SameLine(250);
                 if (Imgui.SmallButton("Start Server"))
                 {
-                    if ((startServerResult = CoopServer.Instance.StartServer()) == null)
+                    if ((startServerResult = coopServer.StartServer()) == null)
                     {
-                        ServerConfiguration config = CoopServer.Instance.Current.ActiveConfig;
-                        connectResult = CoopClient.Instance.Connect(config.NetworkConfiguration.LanAddress, config.NetworkConfiguration.LanPort);
+                        ServerConfiguration config = coopServer.Current.ActiveConfig;
+                        connectResult = coopClient.Connect(config.NetworkConfiguration.LanAddress, config.NetworkConfiguration.LanPort);
                     }
                 }
             }
 
-            if (!CoopClient.Instance.ClientConnected)
+            if (!coopClient.ClientConnected)
             {
                 Imgui.SameLine(350);
                 if (Imgui.SmallButton("Connect to local"))
                 {
                     ServerConfiguration defaultConfiguration = new ServerConfiguration();
-                    connectResult = CoopClient.Instance.Connect(
+                    connectResult = coopClient.Connect(
                         defaultConfiguration.NetworkConfiguration.LanAddress,
                         defaultConfiguration.NetworkConfiguration.LanPort);
                 }
             }
 
-            if (CoopClient.Instance.ClientConnected)
+            if (coopClient.ClientConnected)
             {
                 Imgui.SameLine(300);
                 if (Imgui.SmallButton("Disconnect"))
                 {
-                    CoopClient.Instance.Disconnect();
+                    coopClient.Disconnect();
                 }
             }
 
@@ -233,20 +251,20 @@ namespace Coop.Mod.DebugUtil
             }
         }
 
-        private static void DisplayEntities()
+        private void DisplayEntities()
         {
             if (!Imgui.TreeNode("Parties"))
             {
                 return;
             }
 
-            if (CoopServer.Instance?.Persistence?.EntityManager == null)
+            if (coopServer.Persistence?.EntityManager == null)
             {
                 Imgui.Text("No coop server running.");
             }
             else
             {
-                EntityManager manager = CoopServer.Instance.Persistence.EntityManager;
+                EntityManager manager = coopServer.Persistence.EntityManager;
                 Imgui.Columns(2);
                 Imgui.Separator();
                 Imgui.Text("ID");
@@ -296,15 +314,15 @@ namespace Coop.Mod.DebugUtil
             Imgui.TreePop();
         }
 
-        private static void DisplayConnectionInfo()
+        private void DisplayConnectionInfo()
         {
             if (!Imgui.TreeNode("Connectioninfo"))
             {
                 return;
             }
 
-            Server server = CoopServer.Instance.Current;
-            GameSession session = CoopClient.Instance.Session;
+            Server server = coopServer.Current;
+            GameSession session = coopClient.Session;
 
             if (session.Connection == null)
             {
@@ -370,24 +388,24 @@ namespace Coop.Mod.DebugUtil
             Imgui.TreePop();
         }
 
-        private static readonly MovingAverage m_AverageEventsInQueue = new MovingAverage(60);
+        private readonly MovingAverage m_AverageEventsInQueue = new MovingAverage(60);
 
-        private static void DisplayClientRpcInfo()
+        private void DisplayClientRpcInfo()
         {
             if (!Imgui.TreeNode("Client synchronized method calls"))
             {
                 return;
             }
 
-            if (CoopClient.Instance?.Persistence?.RpcSyncHandlers == null)
+            if (coopClient.Persistence?.RpcSyncHandlers == null)
             {
                 Imgui.Text("Coop client not connected.");
             }
             else
             {
-                RPCSyncHandlers manager = CoopClient.Instance?.Persistence?.RpcSyncHandlers;
+                RPCSyncHandlers manager = coopClient.Persistence?.RpcSyncHandlers;
 
-                EventBroadcastingQueue queue = CoopServer.Instance.Environment?.EventQueue;
+                EventBroadcastingQueue queue = coopServer.GameEnvironmentServer?.EventQueue;
                 if (queue != null)
                 {
                     int currentQueueSize = queue.Count;

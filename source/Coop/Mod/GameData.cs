@@ -20,9 +20,14 @@ namespace Coop.Mod
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         // TODO determine if client needs to create a character
-        public bool RequiresCharacterCreation => !Coop.IsServer;
+        public bool RequiresCharacterCreation { get; private set; }
 
         public LoadResult LoadResult { get; private set; }
+
+        public GameData(bool IsServer)
+        {
+            RequiresCharacterCreation = !IsServer;
+        }
 
         public bool Receive(ArraySegment<byte> rawData)
         {

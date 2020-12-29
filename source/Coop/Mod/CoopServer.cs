@@ -23,6 +23,7 @@ using System.Linq;
 using TaleWorlds.ObjectSystem;
 using Coop.Mod.Persistence.Party;
 using RailgunNet.Logic;
+using Coop.Mod.Repository;
 
 namespace Coop.Mod
 {
@@ -35,23 +36,59 @@ namespace Coop.Mod
         }
     }
 
-    public class CoopServer
+    public interface ICoopServer
+    {
+
+        bool AreAllClientsPlaying { get; }
+        IGameEnvironmentServer GameEnvironmentServer { get; }
+
+        [CanBeNull]
+        SharedRemoteStore SyncedObjectStore { get; }
+
+        [CanBeNull] CoopServerRail Persistence { get; }
+
+        Server Current { get; }
+        ServerGameManager gameManager { get; }
+
+        #region Events
+        event Action OnServerSendingWorldData;
+        event Action OnServerSentWorldData;
+        #endregion
+
+        string StartServer();
+        void ShutDownServer();
+        void StartGame(string saveName);
+
+        ServerGameManager CreateGameManager(LoadGameResult saveGameData = null);
+        ServerGameManager CreateGameManager(LoadResult loadResult = null);
+        string ToString();
+    }
+
+    public class CoopServer : ICoopServer
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private static readonly Lazy<CoopServer> m_Instance =
-            new Lazy<CoopServer>(() => new CoopServer());
-
-        private GameEnvironmentServer m_GameEnvironmentServer;
         public bool AreAllClientsPlaying =>
             m_CoopServerSMs.All(clientSM => clientSM.Key.State.Equals(EServerConnectionState.Ready));
         private readonly Dictionary<ConnectionServer, CoopServerSM> m_CoopServerSMs = new Dictionary<ConnectionServer, CoopServerSM>();
-        public IEnvironmentServer Environment => m_GameEnvironmentServer;
+        public IGameEnvironmentServer GameEnvironmentServer { get; private set; }
 
         private LiteNetManagerServer m_NetManager;
 
-        private CoopServer()
+        private IUpdateableRepository UpdateableRepository;
+        private IReplay Replay;
+        private ICoop Coop;
+
+        public CoopServer(
+            IUpdateableRepository updateableRepository,
+            IReplay replay,
+            ICoop coop,
+            IGameEnvironmentServer gameEnvironmentServer)
         {
+            UpdateableRepository = updateableRepository;
+            Replay = replay;
+            Coop = coop;
+            GameEnvironmentServer = gameEnvironmentServer;
         }
 
         /// <summary>
@@ -62,8 +99,6 @@ namespace Coop.Mod
         public SharedRemoteStore SyncedObjectStore { get; private set; }
 
         [CanBeNull] public CoopServerRail Persistence { get; private set; }
-
-        public static CoopServer Instance => m_Instance.Value;
 
         public Server Current { get; private set; }
         public ServerGameManager gameManager { get; private set; }
@@ -90,12 +125,15 @@ namespace Coop.Mod
                 Current = new Server(eServerType);
 
                 SyncedObjectStore = new SharedRemoteStore(new SerializableFactory());
-                m_GameEnvironmentServer = new GameEnvironmentServer();
+              
                 Persistence = new CoopServerRail(
                     Current,
                     SyncedObjectStore,
-                    Registry.Server(m_GameEnvironmentServer),
-                    config.EventBroadcastTimeout);
+                    Registry.Server(GameEnvironmentServer),
+                    Replay,
+                    Coop,
+                    config.EventBroadcastTimeout
+                );
 
                 Current.Updateables.Add(Persistence);
                 Current.OnClientConnected += OnClientConnected;
@@ -103,7 +141,7 @@ namespace Coop.Mod
 
                 if (eServerType == Server.EType.Direct)
                 {
-                    Main.Instance.Updateables.Add(Current);
+                    UpdateableRepository.Add(Current);
                 }
 
                 Current.Start(config);
@@ -112,7 +150,7 @@ namespace Coop.Mod
 
             if (m_NetManager == null)
             {
-                m_NetManager = new LiteNetManagerServer(Current, new GameData());
+                m_NetManager = new LiteNetManagerServer(Current, new GameData(true));
                 m_NetManager.StartListening();
                 Logger.Debug("Setup network connection for server.");
             }
@@ -129,7 +167,7 @@ namespace Coop.Mod
             Persistence = null;
             SyncedObjectStore = null;
             m_NetManager = null;
-            m_GameEnvironmentServer = null;
+            GameEnvironmentServer = null;
             Current = null;
 
             m_CoopServerSMs.Clear();
@@ -205,8 +243,8 @@ namespace Coop.Mod
             // Event Registration
             connection.OnClientJoined += Persistence.ClientJoined;
             connection.OnDisconnected += Persistence.Disconnected;
-            OnServerSendingWorldData += m_GameEnvironmentServer.LockTimeControlStopped;
-            OnServerSentWorldData += m_GameEnvironmentServer.UnlockTimeControl;
+            OnServerSendingWorldData += GameEnvironmentServer.LockTimeControlStopped;
+            OnServerSentWorldData += GameEnvironmentServer.UnlockTimeControl;
 
             // Packet Handler Registration
             connection.Dispatcher.RegisterPacketHandler(ReceiveClientRequestWorldData);

@@ -19,11 +19,21 @@ namespace Coop.Mod.UI
 	{
 		private readonly Action<SavedGameVM> _onDelete;
 		private readonly Action<SavedGameVM> _onSelection;
-		public SelectedGameVM(SaveGameFileInfo save, bool isSaving, Action<SavedGameVM> onDelete, Action<SavedGameVM> onSelection, Action onCancelLoadSave, Action onDone) :
+		private readonly ICoopServer CoopServer;
+
+		public SelectedGameVM(
+			SaveGameFileInfo save, 
+			bool isSaving, 
+			Action<SavedGameVM> onDelete, 
+			Action<SavedGameVM> onSelection, 
+			Action onCancelLoadSave, 
+			Action onDone,
+			ICoopServer coopServer) :
 			base(save, isSaving, onDelete, onSelection, onCancelLoadSave, onDone)
 		{
 			_onDelete = onDelete;
 			_onSelection = onSelection;
+			CoopServer = coopServer;
 		}
 
 		private void ExecuteDelete()
@@ -61,7 +71,7 @@ namespace Coop.Mod.UI
 				GameStateManager.Current.CleanStates(0);
 				GameStateManager.Current = Module.CurrentModule.GlobalGameStateManager;
 			}
-            MBGameManager.StartNewGame(CoopServer.Instance.CreateGameManager(loadResult));
+            MBGameManager.StartNewGame(CoopServer.CreateGameManager(loadResult));
 		}
 
 	}
@@ -69,13 +79,13 @@ namespace Coop.Mod.UI
 	class CoopLoadUI : SaveLoadVM
     {
 		private new SelectedGameVM CurrentSelectedSave;
-		public CoopLoadUI() : base(false)
+		public CoopLoadUI(ICoopServer coopServer) : base(false)
 		{
 			GetSavedGames().Clear();
 			SaveGameFileInfo[] saveFiles = MBSaveLoad.GetSaveFiles();
 			for (int i = 0; i < saveFiles.Length; i++)
 			{
-				SelectedGameVM item = new SelectedGameVM(saveFiles[i], this.IsSaving, new Action<SavedGameVM>(this.OnDeleteSavedGame), new Action<SavedGameVM>(OnSaveSelection), new Action(this.OnCancelLoadSave), new Action(ExecuteDone));
+				SelectedGameVM item = new SelectedGameVM(saveFiles[i], this.IsSaving, new Action<SavedGameVM>(this.OnDeleteSavedGame), new Action<SavedGameVM>(OnSaveSelection), new Action(this.OnCancelLoadSave), new Action(ExecuteDone), coopServer);
 				GetSavedGames().Add(item);
 			}
 			OnSaveSelection(GetSavedGames().FirstOrDefault<SavedGameVM>());
@@ -142,15 +152,25 @@ namespace Coop.Mod.UI
 		}
 	}
 
+	public interface ICoopLoadGameGauntletScreen
+    {
+
+    }
+
 	[OverrideView(typeof(CoopLoadScreen))]
-	public class CoopLoadGameGauntletScreen : ScreenBase
+	public class CoopLoadGameGauntletScreen : ScreenBase, ICoopLoadGameGauntletScreen
 	{
-		public CoopLoadGameGauntletScreen() { }
+		private readonly ICoopServer CoopServer;
+
+		public CoopLoadGameGauntletScreen(ICoopServer coopServer)
+		{
+			CoopServer = coopServer;
+		}
 
 		protected override void OnInitialize()
 		{
 			base.OnInitialize();
-			_datasource = new CoopLoadUI();
+			_datasource = new CoopLoadUI(CoopServer);
 			_gauntletLayer = new GauntletLayer(1, "GauntletLayer");
 			_gauntletLayer.LoadMovie("SaveLoadScreen", _datasource);
 			_gauntletLayer.InputRestrictions.SetInputRestrictions(true, InputUsageMask.All);

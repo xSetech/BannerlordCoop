@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Autofac;
+using Coop.Mod.Binding;
 using Coop.Mod.Patch;
 using Sync.Reflection;
 using TaleWorlds.CampaignSystem;
@@ -12,6 +14,7 @@ namespace Coop.Mod
 {
     public static class Extensions
     {
+
         public static T GetGameModel<T>(this Game game)
             where T : GameModel
         {
@@ -28,7 +31,13 @@ namespace Coop.Mod
 
         public static bool IsPlayerControlled(this MobileParty party)
         {
-            return CoopClient.Instance.GameState.IsPlayerControlledParty(party);
+
+            if (ContainerGenerator.CoopClient == null)
+            {
+                return false;
+            }
+
+            return ContainerGenerator.CoopClient.GameState.IsPlayerControlledParty(party);
         }
 
         public static string ToFriendlyString(this LoadGameResult loadResult)

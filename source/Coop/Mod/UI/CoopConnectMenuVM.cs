@@ -1,5 +1,6 @@
 ﻿using Network.Infrastructure;
 using System;
+using System.ComponentModel;
 using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Text;
@@ -11,7 +12,13 @@ using TaleWorlds.MountAndBlade.View.Missions;
 
 namespace Coop.Mod.UI
 {
-    internal class CoopConnectMenuVM : ViewModel
+
+    public interface ICoopConnectMenuVM
+    {
+
+    }
+
+    internal class CoopConnectMenuVM : ViewModel, ICoopConnectMenuVM
     {
         public string JoinButtonText => "Join";
         public string GithubButtonText => "Github";
@@ -27,6 +34,13 @@ namespace Coop.Mod.UI
         public string connectPort = new ServerConfiguration().NetworkConfiguration.LanPort.ToString();
 
         public string connectPassword = "";
+
+        private ICoopClient CoopClient;
+
+        public CoopConnectMenuVM(ICoopClient coopClient)
+        {
+            CoopClient = coopClient;
+        }
 
         [DataSourceProperty]
         public string Ip
@@ -87,9 +101,10 @@ namespace Coop.Mod.UI
 
             InformationManager.DisplayMessage( new InformationMessage("Trying to connect to "+ ip.ToString() + ":" + port.ToString()));
 
-            CoopClient.Instance.Connect(
-            ip,
-            port);
+            CoopClient.Connect(
+                ip,
+                port
+            );
 
         }
 

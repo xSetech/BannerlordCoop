@@ -1,4 +1,5 @@
-﻿using TaleWorlds.CampaignSystem;
+﻿using Coop.Mod.Binding;
+using TaleWorlds.CampaignSystem;
 
 namespace Coop.Mod.Behaviour
 {
@@ -15,10 +16,10 @@ namespace Coop.Mod.Behaviour
 
         private static void GameLoaded(CampaignGameStarter gameStarter)
         {
-            CoopClient.Instance.Events.OnGameLoaded.Invoke();
+            ContainerGenerator.CoopClient.Events.OnGameLoaded.Invoke();
 
-            CoopClient.Instance.GameState.AddPlayerControllerParty(MobileParty.MainParty);
-            CoopClient.Instance.Events.OnBeforePlayerPartySpawned.Invoke(MobileParty.MainParty);
+            ContainerGenerator.CoopClient.GameState.AddPlayerControllerParty(MobileParty.MainParty);
+            ContainerGenerator.CoopClient.Events.OnBeforePlayerPartySpawned.Invoke(MobileParty.MainParty);
         }
     }
 }

@@ -299,6 +299,7 @@
   <ItemGroup>
     <Compile Include="Mod\Behaviour\InitServerBehaviour.cs" />
     <Compile Include="Mod\Binding\ContainerGenerator.cs" />
+    <Compile Include="Mod\Config\ClientConfigurationCreator.cs" />
     <Compile Include="Mod\CoopClientSM.cs" />
     <Compile Include="Mod\CoopServerSM.cs" />
     <Compile Include="Mod\DebugUtil\CLICommands.cs" />
@@ -312,6 +313,7 @@
     <Compile Include="Mod\Exceptions.cs" />
     <Compile Include="Mod\GameEnvironmentClient.cs" />
     <Compile Include="Mod\GameLoopRunner.cs" />
+    <Compile Include="Mod\Loader\HarmonyLoader.cs" />
     <Compile Include="Mod\Logging.cs" />
     <Compile Include="Mod\Managers\ClientCharacterCreatorManager.cs" />
     <Compile Include="Mod\Managers\ClientManager.cs" />
@@ -355,6 +357,7 @@
     <Compile Include="Mod\Persistence\World\EventTimeControl.cs" />
     <Compile Include="Mod\Persistence\World\WorldState.cs" />
     <Compile Include="Mod\CoopServerRail.cs" />
+    <Compile Include="Mod\Repository\UpdateableRepository.cs" />
     <Compile Include="Mod\SaveGameData.cs" />
     <Compile Include="Mod\SaveLoad.cs" />
     <Compile Include="Mod\GameData.cs" />
@@ -448,7 +451,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>powershell -ExecutionPolicy Unrestricted -File "$(SolutionDir)..\deploy.ps1" -SolutionDir "$(SolutionDir)\"  -TargetDir "$(TargetDir)\" -TargetFileName "$(TargetFileName) " -Libs Common.dll,Network.dll,Sync.dll,0harmony.dll,LiteNetLib.dll,Stateless.dll,RailgunNet.dll,NLog.dll,Mono.Reflection.dll,Extensions.Data.xxHash.dll,DistributedLock.dll</PostBuildEvent>
+    <PostBuildEvent>powershell -ExecutionPolicy Unrestricted -File "$(SolutionDir)..\deploy.ps1" -SolutionDir "$(SolutionDir)\"  -TargetDir "$(TargetDir)\" -TargetFileName "$(TargetFileName) " -Libs Common.dll,Network.dll,Sync.dll,0harmony.dll,LiteNetLib.dll,Stateless.dll,RailgunNet.dll,NLog.dll,Mono.Reflection.dll,Extensions.Data.xxHash.dll,DistributedLock.dll,Autofac.dll,Microsoft.Bcl.AsyncInterfaces.dll,System.Buffers.dll,System.Diagnostics.DiagnosticSource.dll,System.Memory.dll,System.Numerics.Vectors.dll,System.Runtime.CompilerServices.Unsafe.dll,System.Threading.Tasks.Extensions.dll</PostBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\Fody.6.1.1\build\Fody.targets" Condition="Exists('..\packages\Fody.6.1.1\build\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

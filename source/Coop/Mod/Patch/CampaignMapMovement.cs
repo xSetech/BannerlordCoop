@@ -1,4 +1,5 @@
-﻿using Coop.Mod.Persistence;
+﻿using Coop.Mod.Binding;
+using Coop.Mod.Persistence;
 using Coop.Mod.Persistence.Party;
 using Sync;
 using TaleWorlds.CampaignSystem;
@@ -26,7 +27,7 @@ namespace Coop.Mod.Patch
         [PatchInitializer]
         public static void Init()
         {
-            FieldChangeBuffer.Intercept(Movement, MobilePartyPatch.Setters, Coop.DoSync);
+            FieldChangeBuffer.Intercept(Movement, MobilePartyPatch.Setters, ContainerGenerator.Coop.DoSync);
         }
     }
 }

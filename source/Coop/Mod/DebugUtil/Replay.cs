@@ -25,7 +25,48 @@ namespace Coop.Mod.DebugUtil
     ///     See
     ///     <a href="https://github.com/Bannerlord-Coop-Team/BannerlordCoop/wiki">BannerlordCoop wiki</a>
     /// </remarks>
-    public static class Replay
+    /// 
+
+    public interface IReplay
+    {
+        // point of recording movements; happen on client side
+        // TODO: maybe remove recording point onto server side?
+        Action<EntityId, MobileParty, MovementData> ReplayRecording
+        {
+            get;
+        }
+
+        // point of playback recorded movements; happen on server side
+        // TODO: maybe remove playback point onto client side? or send events data to server through network?
+        Action ReplayPlayback { get; }
+
+        /// <summary>
+        ///     Start recording movement and wait 'stop' command.
+        ///     First step.
+        /// </summary>
+        /// <param name="filename">Filename without path and extension</param>
+        /// <returns></returns>
+        string StartRecord(string filename);
+
+
+        /// <summary>
+        ///     Start replay movements of main party from file and wait 'stop' command.
+        ///     At the same time it starting recording movement for further analize.
+        ///     Second step.
+        /// </summary>
+        /// <param name="filename">Filename without path and extension</param>
+        /// <returns></returns>
+        string Playback(string filename);
+
+        /// <summary>
+        ///     Stop recording and save it in file if it was recording state.
+        ///     Stop playback and verify first recorded movements with second recorded movements.
+        /// </summary>
+        /// <returns></returns>
+        string Stop();
+    }
+
+    public class Replay : IReplay
     {
         public enum ReplayState
         {
@@ -54,17 +95,20 @@ namespace Coop.Mod.DebugUtil
 
         private static ReplayState state { get; set; } = ReplayState.Stop;
 
-        // point of recording movements; happen on client side
-        // TODO: maybe remove recording point onto server side?
-        public static Action<EntityId, MobileParty, MovementData> ReplayRecording
+        public Action<EntityId, MobileParty, MovementData> ReplayRecording
         {
             get;
             private set;
         }
 
-        // point of playback recorded movements; happen on server side
-        // TODO: maybe remove playback point onto client side? or send events data to server through network?
-        public static Action ReplayPlayback { get; private set; }
+        public Action ReplayPlayback { get; private set; }
+
+        private readonly ICoopServer CoopServer;
+
+        public Replay(ICoopServer coopServer)
+        {
+            CoopServer = coopServer;
+        }
 
         private static bool isValid(string fileName)
         {
@@ -72,20 +116,14 @@ namespace Coop.Mod.DebugUtil
                    fileName.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
         }
 
-        /// <summary>
-        ///     Start recording movement and wait 'stop' command.
-        ///     First step.
-        /// </summary>
-        /// <param name="filename">Filename without path and extension</param>
-        /// <returns></returns>
-        internal static string StartRecord(string filename)
+        public string StartRecord(string filename)
         {
             if (state == ReplayState.Playback)
             {
                 return "Could not start recording while playback.";
             }
 
-            if (CoopServer.Instance?.Persistence?.Room?.Tick.IsValid != true)
+            if (CoopServer.Persistence?.Room?.Tick.IsValid != true)
             {
                 return "Could not start recording while server not started.";
             }
@@ -122,21 +160,14 @@ namespace Coop.Mod.DebugUtil
             return $"Recording '{filename}' started.";
         }
 
-        /// <summary>
-        ///     Start replay movements of main party from file and wait 'stop' command.
-        ///     At the same time it starting recording movement for further analize.
-        ///     Second step.
-        /// </summary>
-        /// <param name="filename">Filename without path and extension</param>
-        /// <returns></returns>
-        internal static string Playback(string filename)
+        public string Playback(string filename)
         {
             if (state == ReplayState.Recording)
             {
                 return "Could not start playback while recording.";
             }
 
-            if (CoopServer.Instance?.Persistence?.Room?.Tick.IsValid != true)
+            if (CoopServer.Persistence?.Room?.Tick.IsValid != true)
             {
                 return "Could not start playback while server not started.";
             }
@@ -188,20 +219,15 @@ namespace Coop.Mod.DebugUtil
             state = ReplayState.Playback;
             ReplayPlayback += OnEventPlayback;
 
-            CoopServer.Instance.Persistence.EntityManager.WorldEntityServer.State.TimeControl =
+            CoopServer.Persistence.EntityManager.WorldEntityServer.State.TimeControl =
                 CampaignTimeControlMode.UnstoppablePlay;
-            CoopServer.Instance.Persistence.EntityManager.WorldEntityServer.State.TimeControlLock =
+            CoopServer.Persistence.EntityManager.WorldEntityServer.State.TimeControlLock =
                 false;
 
             return $"Playback file '{filename}' started.";
         }
 
-        /// <summary>
-        ///     Stop recording and save it in file if it was recording state.
-        ///     Stop playback and verify first recorded movements with second recorded movements.
-        /// </summary>
-        /// <returns></returns>
-        internal static string Stop()
+        public string Stop()
         {
             switch (state)
             {
@@ -261,7 +287,7 @@ namespace Coop.Mod.DebugUtil
         /// <param name="entityId"></param>
         /// <param name="party"></param>
         /// <param name="movement"></param>
-        private static void OnEventRecording(
+        private void OnEventRecording(
             EntityId entityId,
             MobileParty party,
             MovementData movement)
@@ -283,7 +309,7 @@ namespace Coop.Mod.DebugUtil
         /// <summary>
         ///     Replay main party movement
         /// </summary>
-        private static void OnEventPlayback()
+        private void OnEventPlayback()
         {
             CampaignTime now = CampaignTime.Now;
 
@@ -302,7 +328,7 @@ namespace Coop.Mod.DebugUtil
                 PlaybackMainPartyList.FirstOrDefault(q => !q.applied && q.time <= now);
             if (replay != null)
             {
-                if (CoopServer.Instance.Persistence.Room.Entities.FirstOrDefault(
+                if (CoopServer.Persistence.Room.Entities.FirstOrDefault(
                     q => q.Id == replay.entityId) is MobilePartyEntityServer entity)
                 {
                     entity.State.Movement = new MovementState
@@ -336,7 +362,7 @@ namespace Coop.Mod.DebugUtil
         ///     and last recorded data (playback state).
         ///     Third step.
         /// </summary>
-        private static void VerifyEvents()
+        private void VerifyEvents()
         {
             List<long?> diffTime = new List<long?>();
 
@@ -385,7 +411,7 @@ namespace Coop.Mod.DebugUtil
         /// </param>
         /// <param name="skipped">count of unknown movements in first recorded data (recording state)</param>
         /// <param name="newEvents">count of unknown movements in second recorded data (playback state)</param>
-        private static void ExportToFile(
+        private void ExportToFile(
             string path,
             List<long?> diffTime,
             int skipped,

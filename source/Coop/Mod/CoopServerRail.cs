@@ -22,16 +22,21 @@ namespace Coop.Mod
 
         [NotNull] private readonly Server m_Server;
 
+        private readonly IReplay Replay;
+
         public CoopServerRail(
             [NotNull] Server server,
             [NotNull] SharedRemoteStore store,
             [NotNull] RailRegistry registry,
+            IReplay replay,
+            ICoop coop,
             TimeSpan eventTimeout)
         {
             m_Server = server;
             EventQueue = new EventBroadcastingQueue(store, eventTimeout);
             m_Instance = new RailServer(registry);
-            EntityManager = new EntityManager(m_Instance);
+            EntityManager = new EntityManager(m_Instance, coop);
+            Replay = replay;
         }
 
         [CanBeNull] public RailServerRoom Room => m_Instance.Room;

@@ -11,16 +11,40 @@ using TaleWorlds.CampaignSystem;
 
 namespace Coop.Mod
 {
-    public class GameEnvironmentServer : IEnvironmentServer
+
+    public interface IGameEnvironmentServer : IEnvironmentServer
+    {
+        new FieldAccessGroup<MobileParty, MovementData> TargetPosition { get; }
+
+        new bool CanChangeTimeControlMode { get; }
+
+        new EventBroadcastingQueue EventQueue { get; }
+
+        new MobileParty GetMobilePartyByIndex(int iPartyIndex);
+
+        new SharedRemoteStore Store { get; }
+
+        void LockTimeControlStopped();
+
+        void UnlockTimeControl();
+    }
+
+    public class GameEnvironmentServer : IGameEnvironmentServer
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         public FieldAccessGroup<MobileParty, MovementData> TargetPosition =>
             CampaignMapMovement.Movement;
 
-        public bool CanChangeTimeControlMode => CoopServer.Instance.AreAllClientsPlaying;
+        public bool CanChangeTimeControlMode => CoopServer.AreAllClientsPlaying;
 
-        public EventBroadcastingQueue EventQueue => CoopServer.Instance.Persistence?.EventQueue;
+        public EventBroadcastingQueue EventQueue => CoopServer.Persistence?.EventQueue;
+
+        private readonly ICoopServer CoopServer;
+        public GameEnvironmentServer(ICoopServer coopServer)
+        {
+            CoopServer = coopServer;
+        }
 
         public MobileParty GetMobilePartyByIndex(int iPartyIndex)
         {
@@ -34,7 +58,7 @@ namespace Coop.Mod
         }
 
         public SharedRemoteStore Store =>
-            CoopServer.Instance.SyncedObjectStore ??
+            CoopServer.SyncedObjectStore ??
             throw new InvalidOperationException("Client not initialized.");
 
         public void LockTimeControlStopped()
