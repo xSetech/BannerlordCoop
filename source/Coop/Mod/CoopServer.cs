@@ -78,17 +78,20 @@ namespace Coop.Mod
         private IUpdateableRepository UpdateableRepository;
         private IReplay Replay;
         private ICoop Coop;
+        private IGameLoopRunner GameLoopRunner;
 
         public CoopServer(
             IUpdateableRepository updateableRepository,
             IReplay replay,
             ICoop coop,
-            IGameEnvironmentServer gameEnvironmentServer)
+            IGameEnvironmentServer gameEnvironmentServer,
+            IGameLoopRunner gameLoopRunner)
         {
             UpdateableRepository = updateableRepository;
             Replay = replay;
             Coop = coop;
             GameEnvironmentServer = gameEnvironmentServer;
+            GameLoopRunner = gameLoopRunner;
         }
 
         /// <summary>
@@ -150,7 +153,7 @@ namespace Coop.Mod
 
             if (m_NetManager == null)
             {
-                m_NetManager = new LiteNetManagerServer(Current, new GameData(true));
+                m_NetManager = new LiteNetManagerServer(Current, new GameData(true, GameLoopRunner));
                 m_NetManager.StartListening();
                 Logger.Debug("Setup network connection for server.");
             }

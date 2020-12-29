@@ -24,9 +24,12 @@ namespace Coop.Mod
 
         public LoadResult LoadResult { get; private set; }
 
-        public GameData(bool IsServer)
+        private readonly IGameLoopRunner GameLoopRunner;
+
+        public GameData(bool IsServer, IGameLoopRunner gameLoopRunner)
         {
             RequiresCharacterCreation = !IsServer;
+            GameLoopRunner = gameLoopRunner;
         }
 
         public bool Receive(ArraySegment<byte> rawData)

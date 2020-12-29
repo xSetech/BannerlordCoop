@@ -8,7 +8,9 @@ namespace Coop.Mod
 
     public interface IGameLoopRunner : IUpdateable
     {
-
+        new void Update(TimeSpan frameTime);
+        void RunOnMainThread(Action action, bool bBlocking = true);
+        void SetGameLoopThread();
     }
 
     internal class GameLoopRunner : IGameLoopRunner
@@ -49,7 +51,7 @@ namespace Coop.Mod
             }
         }
 
-        public static void RunOnMainThread(Action action, bool bBlocking = true)
+        public void RunOnMainThread(Action action, bool bBlocking = true)
         {
             if (Thread.CurrentThread.ManagedThreadId == Instance.m_GameLoopThreadId)
             {

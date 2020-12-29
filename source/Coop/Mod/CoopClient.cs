@@ -89,10 +89,11 @@ namespace Coop.Mod
 
         public CoopClient(
             ICoop coop,
+            IGameLoopRunner gameLoopRunner,
             IClientConfigurationCreator clientConfigurationCreator = null)
         {
 
-            Session = new GameSession(new GameData(coop.IsServer));
+            Session = new GameSession(new GameData(coop.IsServer, gameLoopRunner));
             Session.OnConnectionDestroyed += ConnectionDestroyed;
             m_NetManager = new LiteNetManagerClient(Session, clientConfigurationCreator.Create());
             GameState = new CoopGameState();

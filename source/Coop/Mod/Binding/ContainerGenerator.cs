@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Autofac;
+﻿using Autofac;
 using Coop.Mod.Config;
 using Coop.Mod.DebugUtil;
-using Coop.Mod.Loader;
-using Coop.Mod.Persistence;
 using Coop.Mod.Persistence.Party;
 using Coop.Mod.Repository;
 using Coop.Mod.UI;
@@ -101,7 +94,6 @@ namespace Coop.Mod.Binding
             builder.RegisterType<CoopClient>().As<ICoopClient>();
             builder.RegisterType<GameLoopRunner>().As<IGameLoopRunner>();
             builder.RegisterType<ClientConfigurationCreator>().As<IClientConfigurationCreator>();
-            builder.RegisterType<HarmonyLoader>().As<IHarmonyLoader>();
             builder.RegisterType<UpdateableRepository>().As<IUpdateableRepository>();
             builder.RegisterType<CLICommands>().As<ICLICommands>();
             builder.RegisterType<CoopServer>().As<ICoopServer>();

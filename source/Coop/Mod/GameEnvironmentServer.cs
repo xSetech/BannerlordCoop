@@ -41,9 +41,13 @@ namespace Coop.Mod
         public EventBroadcastingQueue EventQueue => CoopServer.Persistence?.EventQueue;
 
         private readonly ICoopServer CoopServer;
-        public GameEnvironmentServer(ICoopServer coopServer)
+
+        private readonly IGameLoopRunner GameLoopRunner;
+
+        public GameEnvironmentServer(ICoopServer coopServer, IGameLoopRunner gameLoopRunner)
         {
             CoopServer = coopServer;
+            GameLoopRunner = gameLoopRunner;
         }
 
         public MobileParty GetMobilePartyByIndex(int iPartyIndex)
