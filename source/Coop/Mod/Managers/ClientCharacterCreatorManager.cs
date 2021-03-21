@@ -60,10 +60,9 @@ namespace Coop.Mod.Managers
 
             OnCharacterCreationLoadFinishedEvent?.Invoke(this, EventArgs.Empty);
 
-            if (Main.DEBUG)
-            {
-                SkipCharacterCreation();
-            }
+#if DEBUG
+            SkipCharacterCreation();
+#endif
 
             Settlement settlement = Settlement.Find("tutorial_training_field");
             MobileParty.MainParty.Position2D = settlement.Position2D;

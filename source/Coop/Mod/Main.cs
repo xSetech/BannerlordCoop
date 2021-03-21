@@ -1,4 +1,7 @@
-﻿using System;
+﻿// "Preprocessor" Symbols
+#define TESTING
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -29,16 +32,16 @@ namespace Coop.Mod
 {
     internal class Main : NoHarmonyLoader
     {
-        // Debug symbols
-        public static readonly bool DEBUG = true;
-        // Test Symbols
-        public static readonly bool TESTING_ENABLED = true;
-
         public static readonly string LOAD_GAME = "MP";
 
         // -------------
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private bool m_IsFirstTick = true;
+
+
+#if TESTING
+        TestingFramework suite;
+#endif
 
         #region MainMenuButtons
         public static InitialStateOption CoopCampaign =
@@ -50,8 +53,7 @@ namespace Coop.Mod
                 {
                     string[] array = Utilities.GetFullCommandLineString().Split(' ');
 
-                    if (DEBUG)
-                    {
+#if DEBUG
                         foreach (string argument in array)
                         {
                             if (argument.ToLower() == "/server")
@@ -68,13 +70,11 @@ namespace Coop.Mod
                                     defaultConfiguration.NetworkConfiguration.LanPort);
                             }
                         }
-                    }
-                    else
-                    {
-                        ScreenManager.PushScreen(
+#else
+                    ScreenManager.PushScreen(
                             ViewCreatorManager.CreateScreenView<CoopLoadScreen>(
                                 new object[] { }));
-                    }
+#endif
                 },
                 () => { return false; });
 
@@ -86,7 +86,7 @@ namespace Coop.Mod
               JoinWindow,
               () => { return false; }
             );
-        #endregion
+#endregion
 
         public Main()
         {
@@ -129,74 +129,23 @@ namespace Coop.Mod
                 initializer.Invoke(null, null);
             }
 
-            // Skip startup splash screen
-            if (DEBUG)
-            {
-                typeof(Module).GetField(
-                                  "_splashScreenPlayed",
-                                  BindingFlags.Instance | BindingFlags.NonPublic)
-                              .SetValue(Module.CurrentModule, true);
-            }
-
-            if (TESTING_ENABLED)
-            {
-                TestingFramework suite = TestingFramework.Instance;
-            }
+#if DEBUG
+            typeof(Module).GetField(
+                                "_splashScreenPlayed",
+                                BindingFlags.Instance | BindingFlags.NonPublic)
+                            .SetValue(Module.CurrentModule, true);
+            
+#endif
+#if TESTING
+            suite = TestingFramework.Instance;
+#endif
 
             // Apply all patches via harmony
             harmony.PatchAll();
 
-            #region ButtonAssignment
-            CoopCampaign =
-                new InitialStateOption(
-                    "CoOp Campaign",
-                    new TextObject("Host Co-op Campaign"),
-                    9990,
-                    () =>
-                    {
-                        string[] array = Utilities.GetFullCommandLineString().Split(' ');
-
-                        if (DEBUG)
-                        {
-                            foreach (string argument in array)
-                            {
-                                if (argument.ToLower() == "/server")
-                                {
-                                    //TODO add name to args
-                                    CoopServer.Instance.StartGame("MP");
-                                }
-                                else if (argument.ToLower() == "/client")
-                                {
-                                    ServerConfiguration defaultConfiguration =
-                                        new ServerConfiguration();
-                                    CoopClient.Instance.Connect(
-                                        defaultConfiguration.NetworkConfiguration.LanAddress,
-                                        defaultConfiguration.NetworkConfiguration.LanPort);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            ScreenManager.PushScreen(
-                                ViewCreatorManager.CreateScreenView<CoopLoadScreen>(
-                                    new object[] { }));
-                        }
-                    },
-                    () => { return false; });
-
-            JoinCoopGame =
-                new InitialStateOption(
-                  "Join Coop Game",
-                  new TextObject("Join Co-op Campaign"),
-                  9991,
-                  JoinWindow,
-                  () => { return false; }
-                );
-
             Module.CurrentModule.AddInitialStateOption(CoopCampaign);
 
             Module.CurrentModule.AddInitialStateOption(JoinCoopGame);
-            #endregion
         }
 
         protected override void OnSubModuleUnloaded()
