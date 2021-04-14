@@ -5,6 +5,9 @@ using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
 
 namespace Coop.Mod.Patch.Party
 {
+    /// <summary>
+    /// Upon initial connection, we want to ensure that all existing bandits are immediately synced
+    /// </summary>
     [HarmonyPatch(typeof(BanditsCampaignBehavior), "InitBanditParty")]
     internal class BanditsCampaignBehaviorPatch
     {
@@ -15,6 +18,45 @@ namespace Coop.Mod.Patch.Party
         {
             OnBanditAdded?.Invoke(__instance, banditParty);
             return true;
+        }
+    }
+
+    /// <summary>
+    /// Clients shouldn't spawn any bandits. The server will handle the bandits spawning in the Postfix
+    /// </summary>
+    [HarmonyPatch(typeof(BanditPartyComponent), "CreateBanditParty")]
+    internal class BanditsCampaignSpawnPatch
+    {
+        private static bool Prefix()
+        {
+            return Coop.IsServer;
+        }
+
+        private static void Postfix(ref MobileParty __result)
+        {
+            if (!Coop.IsServer)
+                return;
+            
+            CoopServer.Instance.SyncedObjectStore.Insert(__result);
+            CoopServer.Instance.Persistence.MobilePartyEntityManager.AddParty(__result);
+        }
+    }
+
+    [HarmonyPatch(typeof(BanditsCampaignBehavior), "FillANewHideoutWithBandits")]
+    internal class BanditsHideoutSpawnPatch
+    {
+        private static bool Prefix()
+        {
+            return Coop.IsServer;
+        }
+    }
+    
+    [HarmonyPatch(typeof(BanditsCampaignBehavior), "AddBossParty")]
+    internal class BanditsCampaignAddBossPartyPatch
+    {
+        private static bool Prefix()
+        {
+            return Coop.IsServer;
         }
     }
 }

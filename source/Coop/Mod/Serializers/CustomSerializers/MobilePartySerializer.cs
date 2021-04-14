@@ -51,8 +51,7 @@ namespace Coop.Mod.Serializers
                 switch (fieldInfo.Name)
                 {
                     case "_currentSettlement":
-                        SNNSO.Add(fieldInfo, new SettlementSerializer((Settlement)value));
-                        break;
+                    case "_homeSettlement":
                     case "<LastVisitedSettlement>k__BackingField":
                         SNNSO.Add(fieldInfo, new SettlementSerializer((Settlement)value));
                         break;
@@ -64,20 +63,12 @@ namespace Coop.Mod.Serializers
                         SNNSO.Add(fieldInfo, new PartyBaseSerializer((PartyBase)value));
                         break;
                     case "_disorganizedUntilTime":
-                        SNNSO.Add(fieldInfo, new CampaignTimeSerializer((CampaignTime)value));
-                        break;
                     case "_ignoredUntilTime":
-                        SNNSO.Add(fieldInfo, new CampaignTimeSerializer((CampaignTime)value));
-                        break;
                     case "_initiativeRestoreTime":
                         SNNSO.Add(fieldInfo, new CampaignTimeSerializer((CampaignTime)value));
                         break;
                     case "_targetAiFaceIndex":
-                        SNNSO.Add(fieldInfo, new PathFaceRecordSerializer((PathFaceRecord)value));
-                        break;
                     case "_moveTargetAiFaceIndex":
-                        SNNSO.Add(fieldInfo, new PathFaceRecordSerializer((PathFaceRecord)value));
-                        break;
                     case "_aiPathLastFace":
                         SNNSO.Add(fieldInfo, new PathFaceRecordSerializer((PathFaceRecord)value));
                         break;
