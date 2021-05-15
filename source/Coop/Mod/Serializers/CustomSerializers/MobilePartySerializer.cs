@@ -127,10 +127,11 @@ namespace Coop.Mod.Serializers
             MobileParty newMobileParty = MBObjectManager.Instance.CreateObject<MobileParty>(stringId);
 
             // Circular referenced object needs assignment before deserialize
-            if (hero == null)
-            {
-                throw new SerializationException("Must set hero reference before deserializing. Use SetHeroReference()");
-            }
+            // TODO JOKE: CHANGE TO WARNING
+            //if (hero == null)
+            //{
+            //    throw new SerializationException("Must set hero reference before deserializing. Use SetHeroReference()");
+            //}
 
             // Objects requiring a custom serializer
             foreach (KeyValuePair<FieldInfo, ICustomSerializer> entry in SNNSO)

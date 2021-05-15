@@ -7,6 +7,7 @@ using TaleWorlds.SaveSystem.Load;
 using System.Reflection;
 using TaleWorlds.CampaignSystem.Actions;
 using JetBrains.Annotations;
+using Coop.Mod.Serializers;
 
 namespace Coop.Mod.Managers
 {
@@ -49,6 +50,16 @@ namespace Coop.Mod.Managers
                 // Might need to adjust IsClientPlayersParty
                 throw new Exception("Transferred player party could not be found");
             }
+
+            
+            CoopClient.Instance.SyncedObjectStore.OnObjectReceived += (objId, obj) =>
+            {
+                if (obj is MobilePartySerializer serialized)
+                {
+                    // Mobile Party received from server
+                    MobileParty hero = (MobileParty)serialized.Deserialize();
+                }
+            };
         }
 
         public new void OnTick(float dt)

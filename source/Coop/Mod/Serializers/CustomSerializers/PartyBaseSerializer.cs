@@ -87,11 +87,13 @@ namespace Coop.Mod.Serializers
 
         public object Deserialize(PartyBase newPartyBase)
         {
-            if (hero == null)
-            {
-                throw new SerializationException("Must set hero reference before deserializing. Use SetHeroReference()");
-            }
-            else if(mobileParty == null)
+            //TODO JOKE MOVE TO WARNING
+            //if (hero == null)
+            //{
+            //    throw new SerializationException("Must set hero reference before deserializing. Use SetHeroReference()");
+            //}
+            //else if(mobileParty == null)
+            if (mobileParty == null)
             {
                 throw new SerializationException("Must set mobileParty reference before deserializing. Use SetMobilePartyReference()");
             }

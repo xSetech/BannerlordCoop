@@ -136,7 +136,10 @@ namespace Coop.Mod.Persistence
 
             lock (m_Lock)
             {
-                m_Parties.Add(party, entity);
+                if (!m_Parties.Any(z => z.Key == party))
+                {
+                    m_Parties.Add(party, entity);
+                }
             }
         }
 
@@ -162,6 +165,11 @@ namespace Coop.Mod.Persistence
             peer.GrantControl(correspondingEntity);
             party.Ai.SetDoNotMakeNewDecisions(true);
             Logger.Info("{Party} control granted to {Peer}", party, peer.Identifier);
+        }
+
+        public void AddToPendingParties(MobileParty party)
+        {
+            OnPartyAdded(party);
         }
 
         #region Private

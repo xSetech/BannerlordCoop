@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using HarmonyLib;
 using TaleWorlds.CampaignSystem;
 using TaleWorlds.CampaignSystem.SandBox.CampaignBehaviors;
@@ -16,6 +17,9 @@ namespace Coop.Mod.Patch.Party
         private static bool Prefix(BanditsCampaignBehavior __instance, ref MobileParty banditParty, ref Clan faction,
             ref Settlement homeSettlement)
         {
+            if (!Coop.IsServer)
+                return false;
+
             OnBanditAdded?.Invoke(__instance, banditParty);
             return true;
         }
@@ -36,9 +40,11 @@ namespace Coop.Mod.Patch.Party
         {
             if (!Coop.IsServer)
                 return;
-            
+
             CoopServer.Instance.SyncedObjectStore.Insert(__result);
-            CoopServer.Instance.Persistence.MobilePartyEntityManager.AddParty(__result);
+            CoopServer.Instance.Persistence.MobilePartyEntityManager.AddToPendingParties(__result);
+            
+            __result.Party.Visuals.SetMapIconAsDirty();
         }
     }
 
@@ -50,9 +56,18 @@ namespace Coop.Mod.Patch.Party
             return Coop.IsServer;
         }
     }
-    
+
     [HarmonyPatch(typeof(BanditsCampaignBehavior), "AddBossParty")]
     internal class BanditsCampaignAddBossPartyPatch
+    {
+        private static bool Prefix()
+        {
+            return Coop.IsServer;
+        }
+    }
+
+    [HarmonyPatch(typeof(BanditsCampaignBehavior), "SpawnAPartyInFaction")]
+    internal class BanditsCampaignSpawnAPartyInFactionPatch
     {
         private static bool Prefix()
         {
