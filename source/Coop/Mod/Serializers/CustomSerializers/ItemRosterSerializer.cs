@@ -46,9 +46,13 @@ namespace Coop.Mod.Serializers
                 items.Add(newItem);
             }
 
-            typeof(ItemRoster)
+            //  By default ItemRoster._data is null not an empty array, so in case items is empty,
+            //      it must not change its value to an empty array
+            if ( !items.IsEmpty() ) {
+                typeof(ItemRoster)
                 .GetField("_data", BindingFlags.NonPublic | BindingFlags.Instance)
-                .SetValue(newRoster, items.ToArray());
+                .SetValue(newRoster, items.ToArray() );
+            }
 
             return newRoster;
             }
