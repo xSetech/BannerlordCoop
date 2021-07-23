@@ -53,7 +53,10 @@ namespace Coop.Mod.Managers
                         
                         // TODO only do for new players
                         Settlement settlement = Settlement.Find("tutorial_training_field");
-                        EnterSettlementAction.ApplyForParty(hero.PartyBelongedTo, settlement);
+                        if (hero.PartyBelongedTo != null)
+                        {
+                            EnterSettlementAction.ApplyForParty(hero.PartyBelongedTo, settlement);
+                        }
                     }
                 };
             };

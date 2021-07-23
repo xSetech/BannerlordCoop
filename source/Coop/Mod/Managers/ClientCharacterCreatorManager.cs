@@ -25,7 +25,6 @@ using Helpers;
 using Sync.Store;
 using TaleWorlds.CampaignSystem.CharacterCreationContent;
 using TaleWorlds.MountAndBlade.GauntletUI;
-using StoryMode.GauntletUI.CharacterCreationSystem;
 using TaleWorlds.MountAndBlade.ViewModelCollection;
 using System.Runtime;
 

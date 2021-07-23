@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaleWorlds.CampaignSystem;
+using TaleWorlds.Library;
 
 namespace Coop.Mod.GameSync
 {
@@ -14,10 +15,22 @@ namespace Coop.Mod.GameSync
     {
         static MobilePartySync()
         {
-            //When(GameLoop)
-            //    .Calls(Method(nameof(MobileParty.CreateParty)))
-            //    .Broadcast(() => CoopClient.Instance.Synchronization)
-            //    .DelegateTo(IsServer);
+            When(GameLoop)
+                .Calls(Method(typeof(MobileParty)
+                    .GetMethod(
+                        nameof(MobileParty.InitializeMobileParty), 
+                        new Type[] // Second param is to specify which overload we're using of InitializeMobileParty
+                        { 
+                            typeof(PartyTemplateObject), 
+                            typeof(Vec2), 
+                            typeof(float), 
+                            typeof(float), 
+                            typeof(int) 
+                        })
+                    )
+                )
+                .Broadcast(() => CoopClient.Instance.Synchronization)
+                .DelegateTo(IsServer);
 
             ApplyStaticPatches();
             AutoWrapAllInstances(c => new MobilePartySync(c));

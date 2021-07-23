@@ -45,12 +45,18 @@ namespace Coop.Mod.Managers
             if (m_PlayerAsSerialized != null)
             {
                 MobileParty playerParty = MobileParty.All.AsParallel().SingleOrDefault(IsClientPlayersParty);
-                m_PlayerInCampaign = playerParty.LeaderHero;
 
-                // Start player at training field
-                Settlement settlement = Settlement.Find("tutorial_training_field");
-                Campaign.Current.HandleSettlementEncounter(MobileParty.MainParty, settlement);
-                PlayerEncounter.LocationEncounter.CreateAndOpenMissionController(LocationComplex.Current.GetLocationWithId("training_field"), null, null, null);
+                if (playerParty != null)
+                {
+                    m_PlayerInCampaign = playerParty.LeaderHero;
+                
+                    // Start player at training field
+                    Settlement settlement = Settlement.Find("tutorial_training_field");
+                    Campaign.Current.HandleSettlementEncounter(MobileParty.MainParty, settlement);
+                    PlayerEncounter.LocationEncounter.CreateAndOpenMissionController(LocationComplex.Current.GetLocationWithId("training_field"), null, null, null);
+                    // Switch current player party from host to client party
+                    ChangePlayerCharacterAction.Apply(m_PlayerInCampaign);
+                }
             }
             else if(m_HeroGUID != null)
             {
@@ -64,9 +70,6 @@ namespace Coop.Mod.Managers
                 // Might need to adjust IsClientPlayersParty
                 throw new Exception("Transferred player party could not be found");
             }
-
-            // Switch current player party from host to client party
-            ChangePlayerCharacterAction.Apply(m_PlayerInCampaign);
         }
 
         public new void OnTick(float dt)

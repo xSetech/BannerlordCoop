@@ -18,8 +18,8 @@ namespace Coop.Mod.GameSync.Bandit
             //    .Calls(Method(nameof(BanditPartyComponent.CreateBanditParty)))
             //    .DelegateTo(IsServer);
 
-            ApplyStaticPatches();
-            AutoWrapAllInstances(c => new BanditPartyComponentSync(c));
+            //ApplyStaticPatches();
+            //AutoWrapAllInstances(c => new BanditPartyComponentSync(c));
         }
 
         private static ECallPropagation IsServer(IPendingMethodCall call)

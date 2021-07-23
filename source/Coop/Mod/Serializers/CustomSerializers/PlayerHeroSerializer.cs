@@ -121,7 +121,11 @@ namespace Coop.Mod.Serializers
                         // Can reinstantiate on recipient as this is hero data loaded at start of game.
                         SNNSO.Add(fieldInfo, new HeroDeveloperSerializer((HeroDeveloper)value));
                         break;
+                    case "_stayingInSettlement":
+                        //SNNSO.Add(fieldInfo, new CastleSerializer((Hero)value));
+                        break;
                     default:
+                        // TODO - Castle Serializer for `_stayingInSettlement`
                         throw new NotImplementedException("Cannot serialize " + fieldInfo.Name);
 
                 }
@@ -179,7 +183,10 @@ namespace Coop.Mod.Serializers
             base.Deserialize(hero);
 
             // Update health due to member starting as injured
-            hero.PartyBelongedTo.Party.MemberRoster.OnHeroHealthStatusChanged(hero);
+            if (hero.PartyBelongedTo != null)
+            {
+                hero.PartyBelongedTo.Party.MemberRoster.OnHeroHealthStatusChanged(hero);
+            }
 
 
             ConstructorInfo ctorInfo = typeof(LordPartyComponent)
@@ -191,8 +198,12 @@ namespace Coop.Mod.Serializers
             Campaign.Current.MainParty.PartyComponent = lordPartyComponent;
             
             // Invoke party visual onstartup to initialize properly
-            typeof(PartyVisual).GetMethod("TaleWorlds.CampaignSystem.IPartyVisual.OnStartup", BindingFlags.Instance | BindingFlags.NonPublic)
-            .Invoke(hero.PartyBelongedTo.Party.Visuals, new object[] { hero.PartyBelongedTo.Party });
+            if (hero.PartyBelongedTo != null)
+            {
+                typeof(PartyVisual).GetMethod("TaleWorlds.CampaignSystem.IPartyVisual.OnStartup", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(hero.PartyBelongedTo.Party.Visuals, new object[] { hero.PartyBelongedTo.Party });
+            }
+            
 
             return hero;
         }

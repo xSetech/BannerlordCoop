@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using HarmonyLib;
@@ -77,6 +78,16 @@ namespace CoopFramework
         protected static PatchedInvokable Method(string sMethodName)
         {
             return new MethodPatch<TSelf>(typeof(TExtended)).Intercept(sMethodName).Postfix(sMethodName).Methods
+                .First();
+        }
+        /// <summary>
+        /// TODO - LATER
+        /// </summary>
+        /// <param name="methodBase"></param>
+        /// <returns></returns>
+        protected static PatchedInvokable Method(MethodBase methodBase)
+        {
+            return new MethodPatch<TSelf>(typeof(TExtended)).Intercept(methodBase).Postfix(methodBase).Methods
                 .First();
         }
         /// <summary>
