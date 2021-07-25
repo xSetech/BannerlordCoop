@@ -56,7 +56,7 @@ namespace Coop.Mod.Managers
         public MobileParty ClientParty { get; private set; }
         public Hero ClientHero { get; private set; }
         public CharacterObject ClientCharacterObject { get; private set; }
-        
+
 
         public override void OnLoadFinished()
         {
@@ -69,6 +69,9 @@ namespace Coop.Mod.Managers
 #endif
             Settlement settlement = Settlement.Find("tutorial_training_field");
             MobileParty.MainParty.Position2D = settlement.Position2D;
+            typeof(Hero)
+                .GetField("_partyBelongedTo", BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(Hero.MainHero, MobileParty.MainParty);
 
             OnGameLoadFinishedEvent?.Invoke(this, new HeroEventArgs(
                 MobileParty.MainParty.Name.ToString(),
