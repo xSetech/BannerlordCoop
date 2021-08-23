@@ -225,14 +225,24 @@ namespace Coop.Mod
 
             // NLog
             Target.Register<MbLogTarget>("MbLog");
+            Target.Register<FileTarget>("MbLog");
             Mod.Logging.Init(
                 new Target[]
                 {
                     new MbLogTarget
                     {
                         Layout = Layout.FromString("[${level:uppercase=true}] ${message}")
+                    },
+
+                    new FileTarget
+                    {
+                        FileName = Layout.FromString("${basedir}/coop.log"),
+                        Header = Layout.FromString("--- ${longdate}"),
+                        KeepFileOpen = true,
+                        AutoFlush = true
                     }
-                });
+                }
+            );
         }
 
         private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
