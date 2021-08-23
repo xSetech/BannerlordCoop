@@ -20,7 +20,7 @@ namespace Network.Infrastructure
         /// <summary>
         ///     ip address of the server in WAN.
         /// </summary>
-        public IPAddress WanAddress { get; set; } = null;
+        public IPAddress WanAddress { get; set; } = IPAddress.Parse("0.0.0.0");
         /// <summary>
         ///     port of the server in WAN.
         /// </summary>
