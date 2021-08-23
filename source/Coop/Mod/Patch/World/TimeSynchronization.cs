@@ -44,7 +44,10 @@ namespace Coop.Mod.Patch
                 // Take the predicted server side campaign time
                 if (GetAuthoritativeTime == null)
                 {
-                    Logger.Warn("Invalid state. Please set GetAuthoritativeTime during initialization.");
+                    if (Coop.IsClientConnected)
+                    {
+                        Logger.Warn("Invalid state. Please set GetAuthoritativeTime during initialization.");
+                    }
                     return true;
                 }
 
