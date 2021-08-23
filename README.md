@@ -18,8 +18,12 @@ Next:
 - Evaluate feasibility of running all clients in lock step with synced RNG. It would require a lot less hooks into the currently very unstable game DLLs, but might end up in desync hell.
 - Evaluate feasibility of a headless server (run only the game simulation, patch out everything else).
 
+## Pre-requisites
+1. Game version 1.5.9
+2. Checkout this repo and its submodules (i.e. `git submodule update --init`)
+
 ## How to build & deploy
-1. Set the path to your Bannerlord modules folder in `config.json`.
+1. Set the path to your Bannerlord modules folder in `config.json` or run "runmefirst.cmd"
 2. Open the `Coop.sln` in Visual Studio.
 3. Build.
 4. If everything was successful, your Bannerlord mod folder now contains the Coop mod. Enable it through the launcher or launch directly from Visual Studio.
