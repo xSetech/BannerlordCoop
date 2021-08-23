@@ -1,0 +1,6 @@
+[submodule "source/BannerlordTestingEssentials"]
+	path = source/BannerlordTestingEssentials
+	url = https://github.com/xSetech/BannerlordTestingEssentials.git
+[submodule "source/RailgunNet"]
+	path = source/RailgunNet
+	url = https://github.com/xSetech/RailgunNet.git
