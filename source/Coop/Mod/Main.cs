@@ -236,13 +236,23 @@ namespace Coop.Mod
 
                     new FileTarget
                     {
-                        FileName = Layout.FromString("${basedir}/coop.log"),
-                        Header = Layout.FromString("--- ${longdate}"),
+                        FileName = Layout.FromString("${basedir}/coop-process.${processid}.coop.log"),
+                        Layout = Layout.FromString("${longdate} via ${threadid}.${callsite:includeSourcePath=false:} [${level:uppercase=true}] ${message}"),
                         KeepFileOpen = true,
                         AutoFlush = true
                     }
                 }
             );
+
+            // Enable debug "logging"
+            foreach (var rule in LogManager.Configuration.LoggingRules)
+            {
+                for (int i = LogLevel.Trace.Ordinal; i <= 6; i++)
+                {
+                    rule.EnableLoggingForLevel(LogLevel.FromOrdinal(i));
+                }
+            }
+
         }
 
         private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)

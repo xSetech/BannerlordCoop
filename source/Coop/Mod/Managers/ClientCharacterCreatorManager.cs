@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Linq;
 using StoryMode;
 using TaleWorlds.CampaignSystem;
@@ -8,8 +9,10 @@ using System.Reflection;
 using TaleWorlds.Library;
 using Sync.Store;
 using TaleWorlds.CampaignSystem.CharacterCreationContent;
+using TaleWorlds.Localization;
 using TaleWorlds.MountAndBlade.GauntletUI;
 using TaleWorlds.MountAndBlade.ViewModelCollection;
+using NLog;
 
 namespace Coop.Mod.Managers
 {
@@ -28,6 +31,8 @@ namespace Coop.Mod.Managers
     {
         public ClientCharacterCreatorManager(LoadResult saveGameData) : base(saveGameData) { }
 
+        private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
+
         public ClientCharacterCreatorManager()
         {
         }
@@ -43,20 +48,40 @@ namespace Coop.Mod.Managers
 
         public override void OnLoadFinished()
         {
+            Logger.Info("Character load finished...");
             base.OnLoadFinished();
+            Logger.Info("Post character-load finished.");
 
             OnCharacterCreationLoadFinishedEvent?.Invoke(this, EventArgs.Empty);
 
 #if DEBUG
             SkipCharacterCreation();
 #endif
+
+            Logger.Info("Placing character party at the training field");
             Settlement settlement = Settlement.Find("tutorial_training_field");
             MobileParty.MainParty.Position2D = settlement.Position2D;
 
+            // Renamed the main hero for debugging - Columbus
+            Hero.MainHero.Name = new TextObject("Vince");
+
+            var mainHeroName = Hero.MainHero.Name.ToString();
+            var mainPartyName = MobileParty.MainParty.Name.ToString();
+            Logger.Info("Main party is '{}' (ignore?), main hero is '{}'", mainPartyName, mainHeroName);
+
+            Logger.Info("Sending my hero to the server...");
+            var syncd_hero_obj_id = CoopClient.Instance.SyncedObjectStore.Insert(Hero.MainHero);
+            Logger.Info("Sent hero with object id:  {}", syncd_hero_obj_id);
+
+            Logger.Info("Sending my hero's party to the server...");
+            var syncd_party_obj_id = CoopClient.Instance.SyncedObjectStore.Insert(MobileParty.MainParty);
+            Logger.Info("Sent party with object id:  {}", syncd_party_obj_id);
+
             OnGameLoadFinishedEvent?.Invoke(this, new HeroEventArgs(
-                MobileParty.MainParty.Name.ToString(),
-                CoopClient.Instance.SyncedObjectStore.Insert(Hero.MainHero)
+                mainPartyName,
+                syncd_hero_obj_id
             ));
+
             EndGame();
         }
 

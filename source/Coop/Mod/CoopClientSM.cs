@@ -1,6 +1,8 @@
 ﻿using Common;
 using Stateless;
+using Stateless.Graph;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -95,6 +97,10 @@ namespace Coop.Mod
 
             // Client playing
             PlayingState = StateMachine.Configure(ECoopClientState.Playing);
+
+            var state_machine_dot_graph = UmlDotGraph.Format(StateMachine.GetInfo());
+            File.WriteAllText("state_machine.dot", state_machine_dot_graph);
+
         }
     }
 }

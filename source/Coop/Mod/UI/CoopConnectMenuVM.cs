@@ -8,6 +8,8 @@ using TaleWorlds.Engine;
 using TaleWorlds.Engine.Screens;
 using TaleWorlds.Library;
 using TaleWorlds.MountAndBlade.View.Missions;
+using Logger = NLog.Logger;
+using NLog;
 
 namespace Coop.Mod.UI
 {
@@ -27,6 +29,8 @@ namespace Coop.Mod.UI
         public string connectPort = new ServerConfiguration().NetworkConfiguration.LanPort.ToString();
 
         public string connectPassword = "";
+
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         [DataSourceProperty]
         public string Ip
@@ -85,7 +89,7 @@ namespace Coop.Mod.UI
                 return;
             }
 
-            InformationManager.DisplayMessage( new InformationMessage("Trying to connect to "+ ip.ToString() + ":" + port.ToString()));
+            Logger.Info($"You have directed me to connect to {ip}:{port}");
 
             CoopClient.Instance.Connect(
             ip,

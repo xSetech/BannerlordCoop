@@ -94,7 +94,10 @@ namespace Coop.Mod
                 Logger.Error(loadResult.ToFriendlyString());
             }
 
+            Logger.Info("Running the game?");
             GameLoopRunner.RunOnMainThread(() => { LoadResult = loadResult.LoadResult; });
+            Logger.Info("Post-running the game...");
+
             return true;
         }
 

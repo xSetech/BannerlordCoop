@@ -231,12 +231,16 @@ namespace Coop.Mod
             // if saved party exists
             if (CoopSaveManager.PlayerParties.ContainsKey(clientId))
             {
+                Logger.Info("A saved player party exists for the client. Requesting the client skip character creation.");
+
                 // skip character creation on client
                 MBGUID guid = CoopSaveManager.PlayerParties[clientId];
                 connection.Send(new Packet(EPacket.Server_NotifyCharacterExists, new MBGUIDSerializer(guid).Serialize()));
             }
             else
             {
+                Logger.Info("There is no saved player party for the client. Requesting the client enter character creation.");
+
                 // else do character creation
                 connection.Send(new Packet(EPacket.Server_RequireCharacterCreation, new byte[0]));
             }
@@ -268,19 +272,23 @@ namespace Coop.Mod
         [GameServerPacketHandler(ECoopServerState.Preparing, EPacket.Client_DeclineWorldData)]
         private void ReceiveClientDeclineWorldData(ConnectionBase connection, Packet packet)
         {
+            Logger.Info("Client declined world data");
             m_CoopServerSMs[(ConnectionServer)connection].StateMachine.Fire(ECoopServerTrigger.DeclineWorldData);
         }
 
         [GameServerPacketHandler(ECoopServerState.SendingWorldData, EPacket.Client_Loaded)]
         private void ReceiveClientLoaded(ConnectionBase connection, Packet packet)
         {
+            Logger.Info("Client claims to be loaded");
             m_CoopServerSMs[(ConnectionServer)connection].StateMachine.Fire(ECoopServerTrigger.ClientLoaded);
         }
 
         [GameServerPacketHandler(ECoopServerState.Playing, EPacket.Client_PartyChanged)]
         private void ReceiveClientPlayerPartyChanged(ConnectionBase connection, Packet packet)
         {
+            Logger.Info("Client claims their party changed...");
             MBGUID guid = MBGUIDSerializer.Deserialize(new ByteReader(packet.Payload));
+            Logger.Info(".. party guid {}", guid);
             MobileParty party = (MobileParty)MBObjectManager.Instance.GetObject(guid);
 
             party.Party.UpdateVisibilityAndInspected(false);
@@ -296,6 +304,7 @@ namespace Coop.Mod
 
         private void SendInitialWorldData(ConnectionServer connection)
         {
+            Logger.Info("Sending initial world data.");
             OnServerSendingWorldData?.Invoke();
             connection.SendWorldData();
             OnServerSentWorldData?.Invoke();

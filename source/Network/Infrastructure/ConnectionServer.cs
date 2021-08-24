@@ -91,6 +91,7 @@ namespace Network.Infrastructure
         private void ReceiveClientHello(ConnectionBase connection, Packet packet)
         {
             Client_Hello payload = Client_Hello.Deserialize(new ByteReader(packet.Payload));
+            Logger.Info("A client says hello from version {} (which needs to match {})", payload.m_Version, Version.Number);
             if (payload.m_Version == Version.Number)
             {
                 SendRequestClientInfo();
@@ -108,6 +109,7 @@ namespace Network.Infrastructure
 
         private void SendRequestClientInfo()
         {
+            Logger.Info("Requesting additional client information");
             Send(
                 new Packet(
                     EPacket.Server_RequestClientInfo,
@@ -142,8 +144,10 @@ namespace Network.Infrastructure
         [ConnectionServerPacketHandler(EServerConnectionState.ClientJoining, EPacket.Client_RequestParty)]
         private void ReceiveRequestParty(ConnectionBase connection, Packet packet)
         {
+            Logger.Info("Player party request received..");
             RequestPlayerParty playerPartyRequestArgs = new RequestPlayerParty();
             playerPartyRequestArgs.ClientId = Client_Request_Party.Deserialize(new ByteReader(packet.Payload)).m_ClientId;
+            Logger.Info(".. client id: {}", playerPartyRequestArgs.ClientId);
             OnPlayerPartyRequest?.Invoke(this, playerPartyRequestArgs);
         }
 

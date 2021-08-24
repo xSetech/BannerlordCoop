@@ -20,6 +20,7 @@ namespace Coop.NetImpl.LiteNet
 
         public void OnPeerConnected(NetPeer peer)
         {
+            Logger.Info($"peer connected");
             LiteNetConnection network = new LiteNetConnection(peer);
             RailNetPeerWrapper persistence = new RailNetPeerWrapper(network);
             ConnectionClient connection = new ConnectionClient(
@@ -31,6 +32,7 @@ namespace Coop.NetImpl.LiteNet
 
         public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
         {
+            Logger.Info($"peer disconnected");
             if (m_Session.Connection != null)
             {
                 m_Session.Disconnect(disconnectInfo.GetReason(false));

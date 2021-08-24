@@ -39,7 +39,8 @@ namespace Coop.Mod.Persistence.RemoteAction
             }
             if (room == null)
             {
-                Logger.Error("RailRoom is null. Cannot broadcast {Call}", Sync.Registry.IdToInvokable[id]);
+                // TODO
+                //Logger.Error("RailRoom is null. Cannot broadcast {Call}", Sync.Registry.IdToInvokable[id]);
                 return;
             }
             

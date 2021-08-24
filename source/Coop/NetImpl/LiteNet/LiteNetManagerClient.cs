@@ -53,6 +53,8 @@ namespace Coop.NetImpl.LiteNet
         {
             string result = null;
 
+            Logger.Info($"Preparing a connect to {address}:{iPort}...");
+
             IPEndPoint toConnectTo = new IPEndPoint(address, iPort);
             if (Connected)
             {
@@ -69,11 +71,19 @@ namespace Coop.NetImpl.LiteNet
 
             m_NetManager = NetManagerFactory.Create(
                 new LiteNetListenerClient(m_Session),
-                m_Configuration.NetworkConfiguration);
+                m_Configuration.NetworkConfiguration
+            );
+
+            Logger.Info($".. with net manager session: {m_Session}");
+            Logger.Info($".. with net configuration: {m_Configuration.NetworkConfiguration}");
+
             m_NetManager.BroadcastReceiveEnabled = true;
+
             if (m_NetManager.Start())
             {
+                Logger.Info("Network manager thread started, connecting to server...");
                 m_Peer = m_NetManager.Connect(address.ToString(), iPort, "");
+                Logger.Info($"Connected to server: {m_Peer.Tag}");
             }
             else
             {

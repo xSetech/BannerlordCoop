@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -178,11 +179,13 @@ namespace Coop.Mod
                 throw new ArgumentNullException(nameof(con));
             }
 
+            Logger.Info($"Connection was created: {con} / (as server? {Coop.IsServer})");
             Session.Connection.OnConnected += ConnectionEstablished;
         }
 
         private void ConnectionEstablished(ConnectionClient con)
         {
+            Logger.Info($"Establishing the connection: {con} / (as server? {Coop.IsServer})");
             if (m_CoopClientSM.State.Equals(ECoopClientState.MainManu))
             {
                 if (Coop.IsServer)
@@ -194,10 +197,14 @@ namespace Coop.Mod
                     Session.Connection.Dispatcher.RegisterPacketHandler(ReceiveRequireCreateCharacter);
                     Session.Connection.Dispatcher.RegisterPacketHandler(ReceiveCharacterExists);
 
+                    var playerId = new PlatformAPI().GetPlayerID().ToString();
+                    Logger.Info($"Transfering my player id to the server: {playerId}");
+                    Logger.Info("Requesting a hero on the server");
+
                     Session.Connection.Send(
                         new Packet(
                             EPacket.Client_RequestParty,
-                            new Client_Request_Party(new PlatformAPI().GetPlayerID().ToString()).Serialize()));
+                            new Client_Request_Party(playerId).Serialize()));
                 }
 
                 SyncedObjectStore = new RemoteStore(m_SyncedObjects, con, new SerializableFactory());
@@ -217,6 +224,7 @@ namespace Coop.Mod
 
         private void CreateCharacter()
         {
+            Logger.Info("Entering character creation...");
             if (gameManager == null)
             {
                 gameManager = new ClientCharacterCreatorManager();
@@ -229,6 +237,7 @@ namespace Coop.Mod
                         m_HeroId = args.HeroId;
 
                         CharacterCreationOver();
+                        Logger.Info("Character created:  {} (id {})", args.PartyName, args.HeroId);
                     }
                     else
                     {
@@ -273,13 +282,16 @@ namespace Coop.Mod
         [GameClientPacketHandler(ECoopClientState.MainManu, EPacket.Server_RequireCharacterCreation)]
         private void ReceiveRequireCreateCharacter(ConnectionBase connection, Packet packet)
         {
+            Logger.Info("Received notification that character creation is required");
             m_CoopClientSM.StateMachine.Fire(ECoopClientTrigger.RequiresCharacterCreation);
         }
 
         [GameClientPacketHandler(ECoopClientState.MainManu, EPacket.Server_NotifyCharacterExists)]
         private void ReceiveCharacterExists(ConnectionBase connection, Packet packet)
         {
+            Logger.Info("Received notification that a character exists ({}B payload)", packet.Length);
             m_HeroGUID = MBGUIDSerializer.Deserialize(new ByteReader(packet.Payload));
+            Logger.Info("Character with GUID {} exists", m_HeroGUID);
             //m_Hero = (Hero)MBObjectManager.Instance.GetObject(m_HeroGUID);
             m_CoopClientSM.StateMachine.Fire(ECoopClientTrigger.CharacterExists);
         }
@@ -289,14 +301,21 @@ namespace Coop.Mod
 
         public void CharacterCreationOver()
         {
+            Logger.Info("Character creation is over");
             GetStore().OnObjectAcknowledged += (id, obj) =>
             {
+                Logger.Info("Character hero id is {}", m_HeroId);
                 if (id == m_HeroId)
                 {
                     m_CoopClientSM.StateMachine.Fire(ECoopClientTrigger.CharacterCreated);
                     if (obj is Hero hero)
                     {
                         m_Hero = hero;
+                        Logger.Info("Hero assigned: {}", hero.Name);
+
+                    } else
+                    {
+                        Logger.Warn("Hero not assigned");
                     }
                 }
             };
@@ -306,6 +325,7 @@ namespace Coop.Mod
         #region ClientAwaitingWorldData
         private void SendClientRequestInitialWorldData()
         {
+            Logger.Info("Requesting/declining (is server? {}) initial world data", Coop.IsServer);
             if(Coop.IsServer)
             {
                 Session.Connection.Send(
@@ -328,6 +348,7 @@ namespace Coop.Mod
         [GameClientPacketHandler(ECoopClientState.ReceivingWorldData, EPacket.Server_WorldData)]
         private void ReceiveInitialWorldData(ConnectionBase connection, Packet packet)
         {
+            Logger.Info("Received initial world data packet: {packet_size}B", packet.Length);
             bool bSuccess = false;
             try
             {
@@ -343,9 +364,13 @@ namespace Coop.Mod
 
             if (bSuccess)
             {
+                Logger.Info("Hero GUID: {hero_guid}", m_HeroGUID);
+
                 m_CoopClientSM.StateMachine.Fire(ECoopClientTrigger.WorldDataReceived);
+
                 if(m_HeroGUID == new MBGUID(0))
                 {
+                    // Is m_Hero supposed to be null here? - Columbus
                     gameManager = new ClientManager(((GameData)Session.World).LoadResult, m_Hero);
                 }
                 else
@@ -353,14 +378,19 @@ namespace Coop.Mod
                     gameManager = new ClientManager(((GameData)Session.World).LoadResult, m_HeroGUID);
                 }
 
-                
+                Logger.Info("Starting new game...");
                 MBGameManager.StartNewGame(gameManager);
+                Logger.Info("Started new game");
+
                 ClientManager.OnPreLoadFinishedEvent += (source, e) => {
                     CampaignEvents.OnPlayerCharacterChangedEvent.AddNonSerializedListener(this, SendPlayerPartyChanged);
                 };
+
                 ClientManager.OnPostLoadFinishedEvent += (source, e) => {
-                    m_CoopClientSM.StateMachine.Fire(ECoopClientTrigger.GameLoaded); 
+                    m_CoopClientSM.StateMachine.Fire(ECoopClientTrigger.GameLoaded);
                 };
+
+                Logger.Info("Initial world load complete.");
             }
             else
             {

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using NLog;
 
 namespace Coop.Mod
 {
@@ -12,6 +13,8 @@ namespace Coop.Mod
 
         private readonly List<(Action, EventWaitHandle)> m_Queue =
             new List<(Action, EventWaitHandle)>();
+
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         private readonly object m_QueueLock = new object();
         private int m_GameLoopThreadId;
@@ -48,10 +51,14 @@ namespace Coop.Mod
         {
             if (Thread.CurrentThread.ManagedThreadId == Instance.m_GameLoopThreadId)
             {
+                Logger.Info("Starting an 'action' on the main thread");
                 action();
+                Logger.Info("Finished an 'action' on the main thread");
+
             }
             else
             {
+                Logger.Info("Queuing main thread payload");
                 EventWaitHandle ewh = bBlocking ?
                     new EventWaitHandle(false, EventResetMode.ManualReset) :
                     null;

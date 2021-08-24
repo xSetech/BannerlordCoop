@@ -1,6 +1,7 @@
 ﻿using System;
 using Network.Protocol;
 using Version = Network.Protocol.Version;
+using NLog;
 
 namespace Network.Infrastructure
 {
@@ -16,6 +17,8 @@ namespace Network.Infrastructure
     public class ConnectionClient : ConnectionBase
     {
         private readonly ConnectionClientSM m_ClientSM;
+
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         public event Action<ConnectionClient> OnConnected;
 
@@ -80,8 +83,9 @@ namespace Network.Infrastructure
         }
 
         [ConnectionClientPacketHandler(EClientConnectionState.JoinRequesting, EPacket.Server_RequestClientInfo)]
-        private void receiveClientInfoRequest(ConnectionBase connection, Packet packet)  
+        private void receiveClientInfoRequest(ConnectionBase connection, Packet packet)
         {
+            Logger.Info("Client information was requested");
             Server_RequestClientInfo payload =
                 Server_RequestClientInfo.Deserialize(new ByteReader(packet.Payload));
             sendClientInfo();
@@ -89,15 +93,18 @@ namespace Network.Infrastructure
 
         private void sendClientInfo()
         {
+            var client_info_player = new Player("Unknown");
+            Logger.Info("Telling the server my name is {}", client_info_player.Name);
             Send(
                 new Packet(
                     EPacket.Client_Info,
-                    new Client_Info(new Player("Unknown")).Serialize()));
+                    new Client_Info(client_info_player).Serialize()));
         }
 
         [ConnectionClientPacketHandler(EClientConnectionState.JoinRequesting, EPacket.Server_JoinRequestAccepted)]
         private void receiveJoinRequestAccepted(ConnectionBase connection, Packet packet)
         {
+            Logger.Info("My request to join the server was accepted");
             Server_JoinRequestAccepted payload =
                 Server_JoinRequestAccepted.Deserialize(new ByteReader(packet.Payload));
             m_ClientSM.StateMachine.Fire(EClientConnectionTrigger.ServerAcceptedJoinRequest);
